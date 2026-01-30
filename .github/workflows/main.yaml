@@ -1,0 +1,52 @@
+name: Build and Push Microservices
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    strategy:
+      matrix:
+        # Definimos los 4 servicios para construir en paralelo
+        include:
+          - service: ms-usuarios
+            path: ./Microserv_Users
+          - service: ms-tareas
+            path: ./Microserv_Tareas
+          - service: ms-notas
+            path: ./Microserv_Notas
+          - service: ms-asistencia
+            path: ./Microserv_Asistencias
+
+    steps:
+      - name: Checkout del código
+        uses: actions/checkout@v4
+
+      - name: Login en GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extraer metadatos de la imagen
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/${{ github.repository }}/${{ matrix.service }}
+
+      - name: Construir y Push de Imagen Docker
+        uses: docker/build-push-action@v5
+        with:
+          context: ${{ matrix.path }}
+          push: true
+          tags: ghcr.io/${{ github.repository }}/${{ matrix.service }}:latest
+          labels: ${{ steps.meta.outputs.labels }}

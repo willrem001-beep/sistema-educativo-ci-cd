@@ -1,0 +1,33 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ms-usuarios
+spec:
+  replicas: 2 # Correr 2 copias de nuestro servicio
+  selector:
+    matchLabels:
+      app: ms-usuarios
+  template:
+    metadata:
+      labels:
+        app: ms-usuarios
+    spec:
+      containers:
+      - name: ms-usuarios
+        image: ms-usuarios:latest
+        imagePullPolicy: Never # espeficiamos que use la imagen local, no internet por el momento
+        ports:
+        - containerPort: 3001
+        env:
+        - name: DB_HOST
+          value: "db-postgres-service" # Nombre del servicio K8s
+        - name: DB_PORT
+          value: "5432"
+        - name: DB_NAME
+          value: "db_usuarios"
+        - name: DB_USER
+          value: "ms_admin"
+        - name: DB_PASSWORD
+          value: "MsUsuarios_2025!"
+        - name: JWT_SECRET
+          value: "L4_cascada_es_muy_s3gur4_2025@"

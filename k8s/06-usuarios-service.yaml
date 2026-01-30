@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: ms-usuarios-service
+spec:
+  type: NodePort # Nos permite acceder desde afuera del clúster
+  selector:
+    app: ms-usuarios
+  ports:
+    - protocol: TCP
+      port: 3001
+      targetPort: 3001
+      nodePort: 30001 # Puerto expuesto en Minikube (30000-32767)

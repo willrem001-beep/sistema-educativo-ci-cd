@@ -1,0 +1,105 @@
+version: '3.8'
+
+services:
+  # ------------------------------------------------
+  # BASE DE DATOS: POSTGRESQL (Para Usuarios y Notas)
+  # ------------------------------------------------
+  db-postgres:
+    image: postgres:13-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      # No definimos POSTGRES_DB aquí porque el script init creará 2 bases.
+    ports:
+      - "5432:5432" # Solo para debug desde PC en caos de ser necesario
+    volumes:
+      - ./init-db-postgres.sql:/docker-entrypoint-initdb.d/init.sql
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      retries: 5
+
+  # ------------------------------------------------
+  # BASE DE DATOS: MONGODB (Para Tareas y Asistencia)
+  # ------------------------------------------------
+  db-mongo:
+    image: mongo:4.4
+    ports:
+      - "27017:27017" # Solo para debug
+    volumes:
+      - mongo-data:/data/db
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongo localhost:27017/test --quiet
+      interval: 10s
+      retries: 5
+
+  # ------------------------------------------------
+  # MICROSERVICIO 1: USUARIOS (Node.js)
+  # ------------------------------------------------
+  servicio-usuarios:
+    build: ./Microserv_Users
+    container_name: ms-usuarios
+    ports:
+      - "3001:3001"
+    environment:
+      # Importante: Usamos el nombre del servicio 'db-postgres' mas no localhost
+      DB_HOST: db-postgres
+      DB_PORT: 5432
+      DB_NAME: db_usuarios
+      DB_USER: ms_admin
+      DB_PASSWORD: MsUsuarios_2025!
+      JWT_SECRET: L4_cascada_es_muy_s3gur4_2025@
+    depends_on:
+      db-postgres:
+        condition: service_healthy
+
+  # ------------------------------------------------
+  # MICROSERVICIO 2: TAREAS (Node.js + MongoDB)
+  # ------------------------------------------------
+  servicio-tareas:
+    build: ./Microserv_Tareas
+    container_name: ms-tareas
+    ports:
+      - "3002:3002"
+    environment:
+      MONGO_URI: mongodb://db-mongo:27017/db_tareas
+    depends_on:
+      db-mongo:
+        condition: service_healthy
+
+  # ------------------------------------------------
+  # MICROSERVICIO 3: NOTAS (Node.js)
+  # ------------------------------------------------
+  servicio-notas:
+    build: ./Microserv_Notas
+    container_name: ms-notas
+    ports:
+      - "3003:3003"
+    environment:
+      DB_HOST: db-postgres
+      DB_PORT: 5432
+      DB_NAME: db_notas
+      DB_USER: ms_admin
+      DB_PASSWORD: MsUsuarios_2025!
+    depends_on:
+      db-postgres:
+        condition: service_healthy
+
+  # ------------------------------------------------
+  # MICROSERVICIO 4: ASISTENCIA (Node.js + MongoDB)
+  # ------------------------------------------------
+  servicio-asistencia:
+    build: ./Microserv_Asistencias
+    container_name: ms-asistencia
+    ports:
+      - "3004:3004"
+    environment:
+      MONGO_URI: mongodb://db-mongo:27017/db_asistencia
+    depends_on:
+      db-mongo:
+        condition: service_healthy
+
+volumes:
+  postgres-data:
+  mongo-data:

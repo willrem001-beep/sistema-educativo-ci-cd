@@ -1,0 +1,23 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ms-tareas
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: ms-tareas
+  template:
+    metadata:
+      labels:
+        app: ms-tareas
+    spec:
+      containers:
+      - name: ms-tareas
+        image: ms-tareas:latest
+        imagePullPolicy: Never
+        ports:
+        - containerPort: 3002
+        env:
+        - name: MONGO_URI
+          value: "mongodb://mongo-service:27017/db_tareas"
