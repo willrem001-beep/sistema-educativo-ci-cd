@@ -14,8 +14,8 @@ spec:
     spec:
       containers:
       - name: ms-usuarios
-        image: ms-usuarios:latest
-        imagePullPolicy: Never # espeficiamos que use la imagen local, no internet por el momento
+        image: ghcr.io/willrem001-beep/sistema-educativo-ci-cd/ms-usuarios:latest
+        imagePullPolicy: Always 
         ports:
         - containerPort: 3001
         env:

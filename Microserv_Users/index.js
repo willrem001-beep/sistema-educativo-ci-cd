@@ -92,7 +92,7 @@ app.post('/login', async (req, res) => {
 
     // 4. Devolver el token
     res.json({
-      mensaje: "Login exitoso",
+      mensaje: "Login exitoso - VERSION AUTOMATIZADA v1.0",
       token: token,
       usuario: {
         id: user.id,
