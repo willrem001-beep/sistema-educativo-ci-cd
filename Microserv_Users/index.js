@@ -149,12 +149,12 @@ app.put('/usuarios/:id', async (req, res) => {
   try {
     const query = `
       UPDATE usuarios 
-      SET nombre_completo = $1, email = $2, activo = $3, password_hash = $4, fecha_actualizacion = NOW()
+      SET nombre_completo = $1, email = $2, activo = $3, password = $4, fecha_actualizacion = NOW()
       WHERE id = $5
       RETURNING id, email, nombre_completo, rol, activo
     `;
     
-    const result = await pool.query(query, [nombre_completo, email, activo, password_hash, id]);
+    const result = await pool.query(query, [nombre_completo, email, activo, password, id]);
 
     if (result.rows.length === 0) {
       return res.status(404).json({ error: "Usuario no encontrado" });
