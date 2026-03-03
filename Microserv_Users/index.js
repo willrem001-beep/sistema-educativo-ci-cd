@@ -154,7 +154,7 @@ app.put('/usuarios/:id', async (req, res) => {
       RETURNING id, email, nombre_completo, rol, activo
     `;
     
-    const result = await pool.query(query, [nombre_completo, email, activo, id]);
+    const result = await pool.query(query, [nombre_completo, email, activo, password_hash, id]);
 
     if (result.rows.length === 0) {
       return res.status(404).json({ error: "Usuario no encontrado" });
