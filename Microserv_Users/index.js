@@ -144,13 +144,13 @@ app.get('/usuarios/:id', async (req, res) => {
 // RUTA: Actualizar Usuario 
 app.put('/usuarios/:id', async (req, res) => {
   const { id } = req.params;
-  const { nombre_completo, email, activo } = req.body;
+  const { nombre_completo, email, activo, password } = req.body;
 
   try {
     const query = `
       UPDATE usuarios 
-      SET nombre_completo = $1, email = $2, activo = $3, fecha_actualizacion = NOW()
-      WHERE id = $4
+      SET nombre_completo = $1, email = $2, activo = $3, password_hash = $4, fecha_actualizacion = NOW()
+      WHERE id = $5
       RETURNING id, email, nombre_completo, rol, activo
     `;
     
