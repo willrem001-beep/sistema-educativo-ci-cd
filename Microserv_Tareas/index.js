@@ -11,10 +11,8 @@ const PORT = process.env.PORT || 3002;
 app.use(cors());
 app.use(express.json());
 
-// -----------------------------------------------------
-// 1. DEFINIR EL ESQUEMA (SCHEMA) DE MONGO
-// En MongoDB no se usa tablas fijas, sino que se define el "formato" de los documentos.
-// -----------------------------------------------------
+
+// En MongoDB definimos el formato de los documentos.
 const tareaSchema = new mongoose.Schema({
   titulo: { type: String, required: true },
   descripcion: { type: String },
@@ -25,24 +23,16 @@ const tareaSchema = new mongoose.Schema({
     enum: ['pendiente', 'en progreso', 'entregado'], 
     default: 'pendiente' 
   },
-  // Para vincular con el usuario, guardamos su ID o Email (incluso si es en otra base de datos)
   usuario_id: { type: String, required: true },
   fecha_creacion: { type: Date, default: Date.now }
 });
 
-// Crear el Modelo (La 'tabla' virtual en MongoDB)
 const Tarea = mongoose.model('Tarea', tareaSchema);
 
-// -----------------------------------------------------
-// 2. CONEXIÓN A MONGODB
-// -----------------------------------------------------
+
 mongoose.connect(process.env.MONGO_URI)
   .then(() => console.log('Conectado a MongoDB: db_tareas'))
   .catch(err => console.error('Error conectando a MongoDB:', err));
-
-// -----------------------------------------------------
-// 3. RUTAS CRUD
-// -----------------------------------------------------
 
 // RUTA: Crear nueva tarea
 app.post('/tareas', async (req, res) => {
@@ -59,7 +49,7 @@ app.post('/tareas', async (req, res) => {
   }
 });
 
-// RUTA: Listar todas las tareas (GET)
+// RUTA: Listar todas las tareas 
 app.get('/tareas', async (req, res) => {
   try {
     // Podemos filtrar por usuario_id (ej: ?usuario_id=123)
@@ -68,6 +58,48 @@ app.get('/tareas', async (req, res) => {
     
     const tareas = await Tarea.find(filtro);
     res.json(tareas);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// RUTA: Actualizar Tarea
+app.put('/tareas/:id', async (req, res) => {
+  const { id } = req.params;
+  const { titulo, descripcion, estado } = req.body;
+
+  try {
+    
+    const tareaActualizada = await Tarea.findByIdAndUpdate(
+      id, 
+      { titulo, descripcion, estado }, 
+      { new: true, runValidators: true }
+    );
+
+    if (!tareaActualizada) {
+      return res.status(404).json({ error: "Tarea no encontrada" });
+    }
+
+    res.json({ mensaje: "Tarea actualizada", tarea: tareaActualizada });
+
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
+// RUTA: Eliminar Tarea 
+app.delete('/tareas/:id', async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const tareaBorrada = await Tarea.findByIdAndDelete(id);
+
+    if (!tareaBorrada) {
+      return res.status(404).json({ error: "Tarea no encontrada" });
+    }
+
+    res.json({ mensaje: "Tarea eliminada correctamente" });
+
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

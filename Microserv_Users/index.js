@@ -38,7 +38,7 @@ app.post('/register', async (req, res) => {
 
     const values = [
       email,
-      passwordHash, // Aquí guardamos la contraseña segura, no la real
+      passwordHash, 
       nombre_completo,
       rol || 'estudiante'
     ];
@@ -57,7 +57,7 @@ app.post('/register', async (req, res) => {
 });
 
 // -----------------------------------------------------
-// RUTA 2: LOGIN (Nueva funcionalidad)
+// RUTA 2: LOGIN 
 // -----------------------------------------------------
 app.post('/login', async (req, res) => {
   const { email, password } = req.body;
@@ -107,6 +107,83 @@ app.post('/login', async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 
+});
+
+
+app.get('/usuarios', async (req, res) => {
+  try {
+    const result = await pool.query(
+      'SELECT id, email, nombre_completo, rol, activo, fecha_creacion FROM usuarios'
+    );
+    res.json(result.rows);
+  } catch (error) {
+    res.status(500).json({ error: "Error al obtener usuarios" });
+  }
+});
+
+// RUTA: Obtener un usuario específico por ID 
+app.get('/usuarios/:id', async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const result = await pool.query(
+      'SELECT id, email, nombre_completo, rol, activo, fecha_creacion FROM usuarios WHERE id = $1',
+      [id]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: "Usuario no encontrado" });
+    }
+
+    res.json(result.rows[0]);
+  } catch (error) {
+    res.status(500).json({ error: "Error al obtener usuario" });
+  }
+});
+
+// RUTA: Actualizar Usuario 
+app.put('/usuarios/:id', async (req, res) => {
+  const { id } = req.params;
+  const { nombre_completo, email, activo } = req.body;
+
+  try {
+    const query = `
+      UPDATE usuarios 
+      SET nombre_completo = $1, email = $2, activo = $3, fecha_actualizacion = NOW()
+      WHERE id = $4
+      RETURNING id, email, nombre_completo, rol, activo
+    `;
+    
+    const result = await pool.query(query, [nombre_completo, email, activo, id]);
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: "Usuario no encontrado" });
+    }
+
+    res.json({ mensaje: "Usuario actualizado", usuario: result.rows[0] });
+
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Error al actualizar usuario" });
+  }
+});
+
+// RUTA: Eliminar Usuario 
+app.delete('/usuarios/:id', async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const result = await pool.query('DELETE FROM usuarios WHERE id = $1 RETURNING id', [id]);
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: "Usuario no encontrado" });
+    }
+
+    res.json({ mensaje: "Usuario eliminado correctamente" });
+
+  } catch (error) {
+    res.status(500).json({ error: "Error al eliminar usuario" });
+  }
 });
 
 // Iniciar servidor
