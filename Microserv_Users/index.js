@@ -142,7 +142,6 @@ app.get('/usuarios/:id', async (req, res) => {
 });
 
 // RUTA: Actualizar Usuario 
-// RUTA: Actualizar Usuario (con Manejo de Password Seguro)
 app.put('/usuarios/:id', async (req, res) => {
   const { id } = req.params;
   const { nombre_completo, email, activo, password } = req.body;
