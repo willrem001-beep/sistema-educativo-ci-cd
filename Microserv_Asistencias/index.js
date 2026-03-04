@@ -53,6 +53,49 @@ app.get('/asistencia', async (req, res) => {
   }
 });
 
+// RUTA: Actualizar Asistencia (UPDATE)
+app.put('/asistencia/:id', async (req, res) => {
+  const { id } = req.params;
+  const { estado, materia } = req.body;
+
+  try {
+    
+    const asistenciaActualizada = await Asistencia.findByIdAndUpdate(
+      id, 
+      { estado, materia }, 
+      { new: true, runValidators: true } // new: true devuelve el documento actualizado
+    );
+
+    if (!asistenciaActualizada) {
+      return res.status(404).json({ error: "Asistencia no encontrada" });
+    }
+
+    res.json({ mensaje: "Asistencia actualizada", asistencia: asistenciaActualizada });
+
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
+// RUTA: Eliminar Asistencia (DELETE)
+app.delete('/asistencia/:id', async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const asistenciaBorrada = await Asistencia.findByIdAndDelete(id);
+
+    if (!asistenciaBorrada) {
+      return res.status(404).json({ error: "Asistencia no encontrada" });
+    }
+
+    res.json({ mensaje: "Asistencia eliminada correctamente" });
+
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+
 app.listen(PORT, () => {
   console.log(`Microservicio de Asistencia corriendo en puerto ${3004}`);
 });
