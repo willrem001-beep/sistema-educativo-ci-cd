@@ -142,25 +142,40 @@ app.get('/usuarios/:id', async (req, res) => {
 });
 
 // RUTA: Actualizar Usuario 
+// RUTA: Actualizar Usuario (con Manejo de Password Seguro)
 app.put('/usuarios/:id', async (req, res) => {
   const { id } = req.params;
   const { nombre_completo, email, activo, password } = req.body;
 
   try {
-    const query = `
+    // Construimos la consulta SQL dinámicamente
+    let query = `
       UPDATE usuarios 
-      SET nombre_completo = $1, email = $2, activo = $3, password = $4, fecha_actualizacion = NOW()
-      WHERE id = $5
-      RETURNING id, email, nombre_completo, rol, activo
+      SET nombre_completo = $1, email = $2, activo = $3, fecha_actualizacion = NOW()
     `;
-    
-    const result = await pool.query(query, [nombre_completo, email, activo, password, id]);
+    let params = [nombre_completo, email, activo];
+    let nextParamIndex = 4; // El siguiente parámetro será $4
+
+    // Si se envió un password nuevo, lo hasheamos y lo agregamos a la consulta
+    if (password) {
+      const salt = await bcrypt.genSalt(10);
+      const passwordHash = await bcrypt.hash(password, salt);
+      
+      query += `, password_hash = $${nextParamIndex}`;
+      params.push(passwordHash);
+      nextParamIndex++; // El siguiente será $5
+    }
+
+    query += ` WHERE id = $${nextParamIndex} RETURNING id, email, nombre_completo, rol, activo`;
+    params.push(id);
+
+    const result = await pool.query(query, params);
 
     if (result.rows.length === 0) {
       return res.status(404).json({ error: "Usuario no encontrado" });
     }
 
-    res.json({ mensaje: "Usuario actualizado", usuario: result.rows[0] });
+    res.json({ mensaje: "Usuario actualizado correctamente", usuario: result.rows[0] });
 
   } catch (error) {
     console.error(error);
