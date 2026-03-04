@@ -153,7 +153,7 @@ app.put('/usuarios/:id', async (req, res) => {
       SET nombre_completo = $1, email = $2, activo = $3, fecha_actualizacion = NOW()
     `;
     let params = [nombre_completo, email, activo];
-    let nextParamIndex = 4; // El siguiente parámetro será $4
+    let nextParamIndex = 4; 
 
     // Si se envió un password nuevo, lo hasheamos y lo agregamos a la consulta
     if (password) {
