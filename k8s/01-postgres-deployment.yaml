@@ -26,7 +26,14 @@ spec:
         # Montamos sobre la carpeta de inicialización, no sobre el archivo
         - name: init-db
           mountPath: /docker-entrypoint-initdb.d
+        # montaje para que los datos se guarden permanentemente
+        - name: postgres-storage
+          mountPath: /var/lib/postgresql/data 
       volumes:
       - name: init-db
         configMap:
           name: postgres-configmap
+          #volumen para que los datos no se borren tras un reinicio
+      - name: postgres-storage
+        persistentVolumeClaim:
+          claimName: pvc-postgres-data
