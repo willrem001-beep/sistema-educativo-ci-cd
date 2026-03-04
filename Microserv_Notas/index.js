@@ -47,6 +47,51 @@ app.get('/notas', async (req, res) => {
   }
 });
 
+// RUTA: Actualizar Nota (UPDATE)
+app.put('/notas/:id', async (req, res) => {
+  const { id } = req.params;
+  const { materia, calificacion, observacion } = req.body;
+  
+  try {
+    const query = `
+      UPDATE notas 
+      SET materia = $1, calificacion = $2, observacion = $3
+      WHERE id = $4
+      RETURNING *
+    `;
+    
+    const result = await pool.query(query, [materia, calificacion, observacion, id]);
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: "Nota no encontrada" });
+    }
+
+    res.json({ mensaje: "Nota actualizada", nota: result.rows[0] });
+
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Error al actualizar nota" });
+  }
+});
+
+// RUTA: Eliminar Nota (DELETE)
+app.delete('/notas/:id', async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const result = await pool.query('DELETE FROM notas WHERE id = $1 RETURNING id', [id]);
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: "Nota no encontrada" });
+    }
+
+    res.json({ mensaje: "Nota eliminada correctamente" });
+
+  } catch (error) {
+    res.status(500).json({ error: "Error al eliminar nota" });
+  }
+});
+
 app.listen(PORT, () => {
   console.log(`Microservicio de Notas corriendo en puerto ${3003}`);
 });
