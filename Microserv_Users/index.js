@@ -141,37 +141,49 @@ app.get('/usuarios/:id', async (req, res) => {
   }
 });
 
-// RUTA: Actualizar Usuario 
+// RUTA: Actualizar Usuario VERSIÓN ROBUSTA
 app.put('/usuarios/:id', async (req, res) => {
   const { id } = req.params;
   const { nombre_completo, email, rol, activo, password } = req.body;
 
   try {
-
-    let query = `
-      UPDATE usuarios 
-      SET nombre_completo = $1, email = $2, rol = $3, activo = $4, fecha_actualizacion = NOW()
-    `;
-
-    let params = [nombre_completo, email, rol, activo];
-    let nextParamIndex = 5;
-
-    if (password) {
-      const salt = await bcrypt.genSalt(10);
-      const passwordHash = await bcrypt.hash(password, salt);
-
-      query += `, password_hash = $${nextParamIndex}`;
-      params.push(passwordHash);
-      nextParamIndex++;
+    // Validar ID
+    const userId = parseInt(id);
+    if (isNaN(userId)) {
+      return res.status(400).json({ error: "ID inválido" });
     }
 
-    query += ` WHERE id = $${nextParamIndex} RETURNING id, email, nombre_completo, rol, activo`;
-    params.push(id);
-
-    const result = await pool.query(query, params);
-
-    if (result.rows.length === 0) {
+    // Verificar si el usuario existe
+    const existeUsuario = await pool.query('SELECT id FROM usuarios WHERE id = $1', [userId]);
+    if (existeUsuario.rows.length === 0) {
       return res.status(404).json({ error: "Usuario no encontrado" });
+    }
+
+    let result;
+
+    if (password && password.trim() !== '') {
+      // Si hay nueva contraseña
+      const salt = await bcrypt.genSalt(10);
+      const passwordHash = await bcrypt.hash(password, salt);
+      
+      result = await pool.query(
+        `UPDATE usuarios 
+         SET nombre_completo = $1, email = $2, rol = $3, activo = $4, 
+             password_hash = $5, fecha_actualizacion = NOW()
+         WHERE id = $6 
+         RETURNING id, email, nombre_completo, rol, activo, fecha_creacion, fecha_actualizacion`,
+        [nombre_completo, email, rol, activo, passwordHash, userId]
+      );
+    } else {
+      // Sin cambiar contraseña
+      result = await pool.query(
+        `UPDATE usuarios 
+         SET nombre_completo = $1, email = $2, rol = $3, activo = $4, 
+             fecha_actualizacion = NOW()
+         WHERE id = $5 
+         RETURNING id, email, nombre_completo, rol, activo, fecha_creacion, fecha_actualizacion`,
+        [nombre_completo, email, rol, activo, userId]
+      );
     }
 
     res.json({
@@ -180,10 +192,11 @@ app.put('/usuarios/:id', async (req, res) => {
     });
 
   } catch (error) {
-    console.error(error);
+    console.error('Error al actualizar usuario:', error);
     res.status(500).json({ error: "Error al actualizar usuario" });
   }
 });
+
 
 // RUTA: Eliminar Usuario 
 app.delete('/usuarios/:id', async (req, res) => {
