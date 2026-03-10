@@ -32,4 +32,4 @@ spec:
         - name: JWT_SECRET
           value: "L4_cascada_es_muy_s3gur4_2025@"
         - name : JWT_EXPIRES_IN
-          value: 1h
+          value: 3h
