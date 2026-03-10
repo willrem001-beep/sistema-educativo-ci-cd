@@ -144,7 +144,7 @@ app.get('/usuarios/:id', async (req, res) => {
 // RUTA: Actualizar Usuario 
 app.put('/usuarios/:id', async (req, res) => {
   const { id } = req.params;
-  const { nombre_completo, email, activo, password } = req.body;
+  const { nombre_completo, email, rol, activo, password } = req.body;
 
   try {
     // Construimos la consulta SQL dinámicamente
@@ -153,7 +153,7 @@ app.put('/usuarios/:id', async (req, res) => {
       SET nombre_completo = $1, email = $2, rol = $3, activo = $4, fecha_actualizacion = NOW()
     `;
     let params = [nombre_completo, email, rol, activo];
-    let nextParamIndex = 4; 
+    let nextParamIndex = 5; 
 
     // Si se envió un password nuevo, lo hasheamos y lo agregamos a la consulta
     if (password) {
