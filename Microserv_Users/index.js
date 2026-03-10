@@ -150,9 +150,9 @@ app.put('/usuarios/:id', async (req, res) => {
     // Construimos la consulta SQL dinámicamente
     let query = `
       UPDATE usuarios 
-      SET nombre_completo = $1, email = $2, activo = $3, fecha_actualizacion = NOW()
+      SET nombre_completo = $1, email = $2, rol = $3, activo = $4, fecha_actualizacion = NOW()
     `;
-    let params = [nombre_completo, email, activo];
+    let params = [nombre_completo, email, rol, activo];
     let nextParamIndex = 4; 
 
     // Si se envió un password nuevo, lo hasheamos y lo agregamos a la consulta
