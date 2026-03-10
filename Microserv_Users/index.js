@@ -38,7 +38,7 @@ app.post('/register', async (req, res) => {
 
     const values = [
       email,
-      passwordHash, 
+      passwordHash,
       nombre_completo,
       rol || 'estudiante'
     ];
@@ -147,22 +147,22 @@ app.put('/usuarios/:id', async (req, res) => {
   const { nombre_completo, email, rol, activo, password } = req.body;
 
   try {
-    // Construimos la consulta SQL dinámicamente
+
     let query = `
       UPDATE usuarios 
       SET nombre_completo = $1, email = $2, rol = $3, activo = $4, fecha_actualizacion = NOW()
     `;
-    let params = [nombre_completo, email, rol, activo];
-    let nextParamIndex = 5; 
 
-    // Si se envió un password nuevo, lo hasheamos y lo agregamos a la consulta
+    let params = [nombre_completo, email, rol, activo];
+    let nextParamIndex = 5;
+
     if (password) {
       const salt = await bcrypt.genSalt(10);
       const passwordHash = await bcrypt.hash(password, salt);
-      
+
       query += `, password_hash = $${nextParamIndex}`;
       params.push(passwordHash);
-      nextParamIndex++; // El siguiente será $5
+      nextParamIndex++;
     }
 
     query += ` WHERE id = $${nextParamIndex} RETURNING id, email, nombre_completo, rol, activo`;
@@ -174,7 +174,10 @@ app.put('/usuarios/:id', async (req, res) => {
       return res.status(404).json({ error: "Usuario no encontrado" });
     }
 
-    res.json({ mensaje: "Usuario actualizado correctamente", usuario: result.rows[0] });
+    res.json({
+      mensaje: "Usuario actualizado correctamente",
+      usuario: result.rows[0]
+    });
 
   } catch (error) {
     console.error(error);
