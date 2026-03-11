@@ -1,8 +1,15 @@
+const express = require('express');
+const cors = require('cors');
+const mongoose = require('mongoose');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
+require('dotenv').config();
 
-// Configuración de almacenamiento
+const app = express();
+const PORT = process.env.PORT || 3002;
+
+// --- CONFIGURACIÓN DE MULTTER (SUBIDA DE ARCHIVOS) ---
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     const uploadPath = './uploads';
@@ -17,26 +24,12 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage: storage });
 
-const express = require('express');
-const cors = require('cors');
-const mongoose = require('mongoose');
-require('dotenv').config();
-
-const app = express();
-const PORT = process.env.PORT || 3002;
-
-const multer = require('multer');
-const path = require('path');
-const fs = require('fs');
-
-
-
-// Middlewares
+// --- MIDDLEWARES ---
 app.use(cors());
-app.use(express.json());
+app.use(express.json()); // Para JSON normal
+// NOTA: No necesitamos express.urlencoded() aquí porque multer maneja el form-data
 
-
-// En MongoDB definimos el formato de los documentos.
+// --- ESQUEMA MONGODB ---
 const tareaSchema = new mongoose.Schema({
   titulo: { type: String, required: true },
   descripcion: { type: String },
@@ -48,25 +41,27 @@ const tareaSchema = new mongoose.Schema({
     default: 'pendiente' 
   },
   usuario_id: { type: String, required: true }, 
-  asignados: [{ type: String }], // Lista de emails de estudiantes
-  archivo: { type: String }, // URL o nombre del archivo PDF
+  asignados: [{ type: String }], 
+  archivo: { type: String }, 
   fecha_creacion: { type: Date, default: Date.now }
 });
 
 const Tarea = mongoose.model('Tarea', tareaSchema);
 
-
+// --- CONEXIÓN MONGODB ---
 mongoose.connect(process.env.MONGO_URI)
   .then(() => console.log('Conectado a MongoDB: db_tareas'))
   .catch(err => console.error('Error conectando a MongoDB:', err));
 
-// RUTA: Crear nueva tarea
+// --- RUTAS ---
+
+// RUTA: Crear nueva tarea (Con Multer para archivo)
 app.post('/tareas', upload.single('archivo'), async (req, res) => {
+    console.log("DEBUG REQ.BODY:", req.body); // DEBUG: Ver qué llega
+    
     try {
-    // Si viene un archivo, guardamos su nombre
     const archivo = req.file ? req.file.filename : null;
 
-    // Convertir la lista de estudiantes (si viene como string) a array
     let estudiantesAsignados = req.body.asignados;
     if (typeof estudiantesAsignados === 'string') {
         estudiantesAsignados = estudiantesAsignados.split(',');
@@ -89,6 +84,7 @@ app.post('/tareas', upload.single('archivo'), async (req, res) => {
       tarea: tareaGuardada
     });
   } catch (error) {
+    console.error("ERROR:", error); // DEBUG
     res.status(400).json({ error: error.message });
   }
 });
@@ -102,11 +98,10 @@ app.get('/tareas', async (req, res) => {
     if (!usuario_id) {
         tareas = await Tarea.find();
     } else {
-        // Busca tareas donde el usuario es el CREADOR O está en la lista de ASIGNADOS
         tareas = await Tarea.find({
             $or: [
-                { usuario_id: usuario_id }, // Tareas que yo creé
-                { asignados: usuario_id }  // Tareas que me asignaron
+                { usuario_id: usuario_id }, 
+                { asignados: usuario_id }  
             ]
         });
     }
@@ -122,19 +117,14 @@ app.put('/tareas/:id', async (req, res) => {
   const { titulo, descripcion, estado } = req.body;
 
   try {
-    
     const tareaActualizada = await Tarea.findByIdAndUpdate(
       id, 
       { titulo, descripcion, estado }, 
       { new: true, runValidators: true }
     );
 
-    if (!tareaActualizada) {
-      return res.status(404).json({ error: "Tarea no encontrada" });
-    }
-
+    if (!tareaActualizada) return res.status(404).json({ error: "Tarea no encontrada" });
     res.json({ mensaje: "Tarea actualizada", tarea: tareaActualizada });
-
   } catch (error) {
     res.status(400).json({ error: error.message });
   }
@@ -143,22 +133,16 @@ app.put('/tareas/:id', async (req, res) => {
 // RUTA: Eliminar Tarea 
 app.delete('/tareas/:id', async (req, res) => {
   const { id } = req.params;
-
   try {
     const tareaBorrada = await Tarea.findByIdAndDelete(id);
-
-    if (!tareaBorrada) {
-      return res.status(404).json({ error: "Tarea no encontrada" });
-    }
-
+    if (!tareaBorrada) return res.status(404).json({ error: "Tarea no encontrada" });
     res.json({ mensaje: "Tarea eliminada correctamente" });
-
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 });
 
-// Iniciar servidor
+// --- INICIAR SERVIDOR ---
 app.listen(PORT, () => {
-  console.log(`Microservicio de Tareas corriendo en puerto ${3002}`);
+  console.log(`Microservicio de Tareas corriendo en puerto ${PORT}`);
 });
