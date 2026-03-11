@@ -7,6 +7,27 @@ require('dotenv').config();
 const app = express();
 const PORT = process.env.PORT || 3002;
 
+const multer = require('multer');
+const path = require('path');
+const fs = require('fs');
+
+// Configuración de almacenamiento local de archivos
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    const uploadPath = './uploads';
+    if (!fs.existsSync(uploadPath)){
+        fs.mkdirSync(uploadPath);
+    }
+    cb(null, uploadPath);
+  },
+  filename: (req, file, cb) => {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    cb(null, uniqueSuffix + path.extname(file.originalname));
+  }
+});
+
+const upload = multer({ storage: storage });
+
 // Middlewares
 app.use(cors());
 app.use(express.json());
@@ -23,7 +44,9 @@ const tareaSchema = new mongoose.Schema({
     enum: ['pendiente', 'en progreso', 'entregado'], 
     default: 'pendiente' 
   },
-  usuario_id: { type: String, required: true },
+  usuario_id: { type: String, required: true }, 
+  asignados: [{ type: String }], // Lista de emails de estudiantes
+  archivo: { type: String }, // URL o nombre del archivo PDF
   fecha_creacion: { type: Date, default: Date.now }
 });
 
@@ -35,9 +58,27 @@ mongoose.connect(process.env.MONGO_URI)
   .catch(err => console.error('Error conectando a MongoDB:', err));
 
 // RUTA: Crear nueva tarea
-app.post('/tareas', async (req, res) => {
+app.post('/tareas', upload.single('archivo'), async (req, res) => {
   try {
-    const nuevaTarea = new Tarea(req.body);
+    // Si viene un archivo, guardamos su nombre
+    const archivo = req.file ? req.file.filename : null;
+
+    // Convertir la lista de estudiantes (si viene como string) a array
+    let estudiantesAsignados = req.body.asignados;
+    if (typeof estudiantesAsignados === 'string') {
+        estudiantesAsignados = estudiantesAsignados.split(',');
+    }
+
+    const nuevaTarea = new Tarea({
+      titulo: req.body.titulo,
+      descripcion: req.body.descripcion,
+      materia: req.body.materia,
+      fecha_entrega: req.body.fecha_entrega,
+      usuario_id: req.body.usuario_id,
+      asignados: estudiantesAsignados || [],
+      archivo: archivo 
+    });
+    
     const tareaGuardada = await nuevaTarea.save();
     
     res.status(201).json({
@@ -49,14 +90,23 @@ app.post('/tareas', async (req, res) => {
   }
 });
 
-// RUTA: Listar todas las tareas 
+// RUTA: Listar tareas
 app.get('/tareas', async (req, res) => {
   try {
-    // Podemos filtrar por usuario_id (ej: ?usuario_id=123)
     const { usuario_id } = req.query;
-    const filtro = usuario_id ? { usuario_id } : {};
-    
-    const tareas = await Tarea.find(filtro);
+    let tareas;
+
+    if (!usuario_id) {
+        tareas = await Tarea.find();
+    } else {
+        // Busca tareas donde el usuario es el CREADOR O está en la lista de ASIGNADOS
+        tareas = await Tarea.find({
+            $or: [
+                { usuario_id: usuario_id }, // Tareas que yo creé
+                { asignados: usuario_id }  // Tareas que me asignaron
+            ]
+        });
+    }
     res.json(tareas);
   } catch (error) {
     res.status(500).json({ error: error.message });
