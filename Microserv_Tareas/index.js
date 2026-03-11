@@ -1,3 +1,21 @@
+const multer = require('multer');
+const path = require('path');
+const fs = require('fs');
+
+// Configuración de almacenamiento
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    const uploadPath = './uploads';
+    if (!fs.existsSync(uploadPath)) fs.mkdirSync(uploadPath);
+    cb(null, uploadPath);
+  },
+  filename: (req, file, cb) => {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    cb(null, uniqueSuffix + path.extname(file.originalname));
+  }
+});
+
+const upload = multer({ storage: storage });
 
 const express = require('express');
 const cors = require('cors');
@@ -11,22 +29,7 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 
-// Configuración de almacenamiento local de archivos
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    const uploadPath = './uploads';
-    if (!fs.existsSync(uploadPath)){
-        fs.mkdirSync(uploadPath);
-    }
-    cb(null, uploadPath);
-  },
-  filename: (req, file, cb) => {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    cb(null, uniqueSuffix + path.extname(file.originalname));
-  }
-});
 
-const upload = multer({ storage: storage });
 
 // Middlewares
 app.use(cors());
@@ -59,7 +62,7 @@ mongoose.connect(process.env.MONGO_URI)
 
 // RUTA: Crear nueva tarea
 app.post('/tareas', upload.single('archivo'), async (req, res) => {
-  try {
+    try {
     // Si viene un archivo, guardamos su nombre
     const archivo = req.file ? req.file.filename : null;
 
