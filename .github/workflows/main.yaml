@@ -3,8 +3,15 @@ name: Build and Push Microservices
 on:
   push:
     branches: [ "main" ]
+    paths-ignore: # Opcional: ignorar cambios en docs
+      - '**.md'
+      - 'docs/**'
   pull_request:
     branches: [ "main" ]
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_TAG: ${{ github.sha }} # Usar el SHA del commit como tag
 
 jobs:
   build-and-push:
@@ -12,41 +19,83 @@ jobs:
     permissions:
       contents: read
       packages: write
+      id-token: write # Para mayor seguridad
 
     strategy:
       matrix:
-        # Definimos los 4 servicios para construir en paralelo
         include:
           - service: ms-usuarios
             path: ./Microserv_Users
+            port: 3001
           - service: ms-tareas
             path: ./Microserv_Tareas
+            port: 3002
           - service: ms-notas
             path: ./Microserv_Notas
+            port: 3003
           - service: ms-asistencia
             path: ./Microserv_Asistencias
+            port: 3004
+      fail-fast: false # No cancelar otros servicios si uno falla
 
     steps:
       - name: Checkout del código
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Obtener todo el historial para metadatos
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+        with:
+          driver-opts: network=host # Mejor rendimiento de red
 
       - name: Login en GitHub Container Registry
         uses: docker/login-action@v3
         with:
-          registry: ghcr.io
+          registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
+        # timeout-minutes: 5 # Si necesitas timeout personalizado
 
       - name: Extraer metadatos de la imagen
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: ghcr.io/${{ github.repository }}/${{ matrix.service }}
+          images: ${{ env.REGISTRY }}/${{ github.repository }}/${{ matrix.service }}
+          tags: |
+            type=raw,value=latest,enable={{is_default_branch}}
+            type=sha,format=short
+            type=ref,event=branch
+            type=ref,event=pr
+          labels: |
+            org.opencontainers.image.title=${{ matrix.service }}
+            org.opencontainers.image.description=Microservicio ${{ matrix.service }}
+            org.opencontainers.image.version=${{ github.sha }}
+            maintainer=${{ github.repository_owner }}
 
       - name: Construir y Push de Imagen Docker
         uses: docker/build-push-action@v5
         with:
           context: ${{ matrix.path }}
-          push: true
-          tags: ghcr.io/${{ github.repository }}/${{ matrix.service }}:latest
+          push: ${{ github.event_name != 'pull_request' }} # Solo push si no es PR
+          tags: |
+            ${{ env.REGISTRY }}/${{ github.repository }}/${{ matrix.service }}:latest
+            ${{ env.REGISTRY }}/${{ github.repository }}/${{ matrix.service }}:${{ env.IMAGE_TAG }}
           labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          build-args: |
+            BUILDKIT_CONTEXT_KEEP_GIT_DIR=1
+            SERVICE_PORT=${{ matrix.port }}
+
+      - name: Verificar imagen (opcional)
+        if: github.event_name != 'pull_request'
+        run: |
+          docker pull ${{ env.REGISTRY }}/${{ github.repository }}/${{ matrix.service }}:${{ env.IMAGE_TAG }}
+          echo "✅ Imagen ${{ matrix.service }} publicada correctamente"
+          
+      - name: Notificar fallo (opcional)
+        if: failure()
+        run: |
+          echo "❌ Falló la construcción de ${{ matrix.service }}"
+          # Aquí podrías agregar integración con Slack/Discord
