@@ -48,13 +48,20 @@ const tareaSchema = new mongoose.Schema({
 
 const Tarea = mongoose.model('Tarea', tareaSchema);
 
+const materiaSchema = new mongoose.Schema({
+  nombre: { type: String, required: true, unique: true }, 
+  docente_id: { type: String, required: true }, 
+  estudiantes: [{ type: String }]
+});
+
+const Materia = mongoose.model('Materia', materiaSchema);
+
 // --- CONEXIÓN MONGODB ---
 mongoose.connect(process.env.MONGO_URI)
   .then(() => console.log('Conectado a MongoDB: db_tareas'))
   .catch(err => console.error('Error conectando a MongoDB:', err));
-
-// --- RUTAS ---
-
+ 
+//RUTAS CRUD DEL MICROSERVICIO TAREAS
 // RUTA: Crear nueva tarea (Con Multer para archivo)
 app.post('/tareas', upload.single('archivo'), async (req, res) => {
     console.log("DEBUG REQ.BODY:", req.body); // DEBUG: Ver qué llega
@@ -139,6 +146,51 @@ app.delete('/tareas/:id', async (req, res) => {
     res.json({ mensaje: "Tarea eliminada correctamente" });
   } catch (error) {
     res.status(500).json({ error: error.message });
+  }
+});
+
+//RUTAS PARA CREAR MATERIAS 
+// 1. Crear Materia (El Admin la crea y asigna docente)
+app.post('/materias', async (req, res) => {
+  try {
+    const { nombre, docente_id, estudiantes } = req.body;
+    const nuevaMateria = new Materia({
+      nombre, 
+      docente_id, 
+      estudiantes: estudiantes || []
+    });
+    await nuevaMateria.save();
+    res.status(201).json(nuevaMateria);
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
+// 2. Listar Materias (Para usar en los Dropdowns)
+app.get('/materias', async (req, res) => {
+  try {
+    // Si soy docente, veo solo mis materias. Si admin, veo todas.
+    const { docente_id } = req.query;
+    const query = docente_id ? { docente_id } : {};
+    const materias = await Materia.find(query);
+    res.json(materias);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// 3. Asignar/Editar Estudiantes a una Materia
+app.put('/materias/:id', async (req, res) => {
+  try {
+    const { nombre, estudiantes } = req.body;
+    const materiaActualizada = await Materia.findByIdAndUpdate(
+      req.params.id, 
+      { nombre, estudiantes }, 
+      { new: true }
+    );
+    res.json(materiaActualizada);
+  } catch (error) {
+    res.status(400).json({ error: error.message });
   }
 });
 
