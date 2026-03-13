@@ -11,7 +11,7 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_TAG: ${{ github.sha }} # Usar el SHA del commit como tag
+  IMAGE_TAG: ${{ github.sha }} 
 
 jobs:
   build-and-push:
@@ -19,7 +19,7 @@ jobs:
     permissions:
       contents: read
       packages: write
-      id-token: write # Para mayor seguridad
+      id-token: write 
 
     strategy:
       matrix:
