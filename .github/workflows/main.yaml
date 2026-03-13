@@ -21,21 +21,21 @@ jobs:
     strategy:
       matrix:
         include:
-          # CORREGIDAS: RUTAS EN MINÚSCULAS Y PUERTOS
+          
           - service: ms-usuarios
-            path: ./microservicio-usuarios
+            path: ./Microserv-Users
             port: 3001
             allow-test-failure: false
           - service: ms-tareas
-            path: ./microserv-tareas
+            path: ./Microserv-Tareas
             port: 3002
             allow-test-failure: true # PERMITE FALLAR SI NO HAY TESTS
           - service: ms-notas
-            path: ./microserv-notas
+            path: ./Microserv-Notas
             port: 3003
             allow-test-failure: true
           - service: ms-asistencia
-            path: ./microserv-asistencia
+            path: ./mMicroserv-Asistencia
             port: 3004
             allow-test-failure: true
           # FRONTEND
