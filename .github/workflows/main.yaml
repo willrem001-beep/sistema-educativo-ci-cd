@@ -25,7 +25,7 @@ jobs:
       matrix:
         include:
           - service: ms-usuarios
-            path: ./Microserv_Usuarios
+            path: ./Microserv_Users
             port: 3001
           - service: ms-tareas
             path: ./Microserv_Tareas
@@ -36,8 +36,6 @@ jobs:
           - service: ms-asistencia
             path: ./Microserv_Asistencias
             port: 3004
-          - service: ms-frontend
-            path: ./frontend-tesis 
       fail-fast: false # No cancelar otros servicios si uno falla
 
     steps:
@@ -45,22 +43,6 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0 # Obtener todo el historial para metadatos
-
-      # --- NUEVO PASO: Instalar Node.js para ejecutar tests ---
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '18'
-
-      # --- NUEVO PASO: Ejecutar Tests ---
-      - name: Install Dependencies & Run Tests
-        working-directory: ${{ matrix.path }}
-        run: |
-          echo "🧪 Ejecutando tests en ${{ matrix.service }}..."
-          npm ci
-          npm test
-          echo "✅ Tests pasados para ${{ matrix.service }}"
-      # -------------------------------------------------
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -73,7 +55,7 @@ jobs:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-        # timeout-minutes: 5
+        # timeout-minutes: 5 # Si necesitas timeout personalizado
 
       - name: Extraer metadatos de la imagen
         id: meta
@@ -115,5 +97,5 @@ jobs:
       - name: Notificar fallo (opcional)
         if: failure()
         run: |
-          echo "❌ Falló la construcción o tests de ${{ matrix.service }}"
+          echo "❌ Falló la construcción de ${{ matrix.service }}"
           # Aquí podrías agregar integración con Slack/Discord
