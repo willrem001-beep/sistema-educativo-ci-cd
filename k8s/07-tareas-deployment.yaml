@@ -21,3 +21,10 @@ spec:
         env:
         - name: MONGO_URI
           value: "mongodb://mongo-service:27017/db_tareas"
+        volumeMounts:
+        - name: uploads-storage
+          mountPath: /app/uploads
+       volumes:
+      - name: uploads-storage
+        persistentVolumeClaim:
+          claimName: pvc-tareas-uploads
