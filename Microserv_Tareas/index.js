@@ -3,6 +3,7 @@ const cors = require('cors');
 const mongoose = require('mongoose');
 const multer = require('multer');
 const path = require('path');
+
 const fs = require('fs');
 require('dotenv').config();
 
@@ -24,9 +25,12 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage: storage });
 
-// --- MIDDLEWARES ---
+
+// MIDDLEWARES 
 app.use(cors());
-app.use(express.json()); // Para JSON normal
+app.use(express.json());
+app.use('/uploads', express.static('uploads'));
+
 // NOTA: No necesitamos express.urlencoded() aquí porque multer maneja el form-data
 
 // --- ESQUEMA MONGODB ---
