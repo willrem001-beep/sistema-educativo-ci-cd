@@ -1,6 +1,7 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../autenticacion/AuthContext";
+import { AuthProvider } from '../autenticacion/AuthContext'
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -42,14 +43,10 @@ const Login = () => {
 
         <form onSubmit={handleLogin}>
           <div className="mb-4">
-            <label 
-              htmlFor="email"
-              className="block text-gray-700 text-sm font-bold mb-2"
-            >
+            <label className="block text-gray-700 text-sm font-bold mb-2">
               Email
             </label>
             <input
-              id="email"
               type="text"
               className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
               value={email}
@@ -60,14 +57,10 @@ const Login = () => {
           </div>
 
           <div className="mb-6">
-            <label 
-              htmlFor="password"
-              className="block text-gray-700 text-sm font-bold mb-2"
-            >
+            <label className="block text-gray-700 text-sm font-bold mb-2">
               Contraseña
             </label>
             <input
-              id="password"
               type="password"
               className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
               value={password}
@@ -79,14 +72,15 @@ const Login = () => {
 
           <button
             type="submit"
-            className={`w-full bg-blue-600 text-white font-bold py-2 rounded hover:bg-blue-700 transition ${
-              loading ? "opacity-50 cursor-not-allowed" : ""
-            }`}
+            className={`w-full bg-blue-600 text-white font-bold py-2 rounded hover:bg-blue-700 transition ${loading ? "opacity-50 cursor-not-allowed" : ""
+              }`}
             disabled={loading}
           >
             {loading ? "Cargando..." : "Ingresar"}
           </button>
         </form>
+
+
       </div>
     </div>
   );
