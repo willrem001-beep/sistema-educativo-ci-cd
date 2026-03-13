@@ -23,19 +23,19 @@ jobs:
         include:
           
           - service: ms-usuarios
-            path: ./Microserv-Users
+            path: ./Microserv_Users
             port: 3001
             allow-test-failure: false
           - service: ms-tareas
-            path: ./Microserv-Tareas
+            path: ./Microserv_Tareas
             port: 3002
             allow-test-failure: true # PERMITE FALLAR SI NO HAY TESTS
           - service: ms-notas
-            path: ./Microserv-Notas
+            path: ./Microserv_Notas
             port: 3003
             allow-test-failure: true
           - service: ms-asistencia
-            path: ./mMicroserv-Asistencia
+            path: ./Microserv_Asistencias
             port: 3004
             allow-test-failure: true
           # FRONTEND
