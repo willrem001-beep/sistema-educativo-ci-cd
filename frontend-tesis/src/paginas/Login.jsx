@@ -1,6 +1,35 @@
 import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../autenticacion/AuthContext";
+import { AuthProvider } from '../autenticacion/AuthContext'
+
+const renderWithRouter = (ui, { route = '/' } = {}) => {
+  window.history.pushState({}, 'Test page', route)
+  return render(<BrowserRouter>{ui}</BrowserRouter>)
+}
+
+describe('Login Component', () => {
+  it('renderiza el título de Login', () => {
+    renderWithRouter(
+      <AuthProvider>
+        <Login />
+      </AuthProvider>
+    )
+    const titleElement = screen.getByText(/Iniciar Sesión/i)
+    expect(titleElement).toBeInTheDocument()
+  })
+
+  it('renderiza los inputs de email y contraseña', () => {
+    // ARREGLADO: Envolver Login dentro de AuthProvider
+    renderWithRouter(
+      <AuthProvider>
+        <Login />
+      </AuthProvider>
+    )
+    expect(screen.getByLabelText(/Email/i)).toBeInTheDocument()
+    expect(screen.getByLabelText(/Contraseña/i)).toBeInTheDocument()
+  })
+})
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -71,16 +100,15 @@ const Login = () => {
 
           <button
             type="submit"
-            className={`w-full bg-blue-600 text-white font-bold py-2 rounded hover:bg-blue-700 transition ${
-              loading ? "opacity-50 cursor-not-allowed" : ""
-            }`}
+            className={`w-full bg-blue-600 text-white font-bold py-2 rounded hover:bg-blue-700 transition ${loading ? "opacity-50 cursor-not-allowed" : ""
+              }`}
             disabled={loading}
           >
             {loading ? "Cargando..." : "Ingresar"}
           </button>
         </form>
 
-        
+
       </div>
     </div>
   );
