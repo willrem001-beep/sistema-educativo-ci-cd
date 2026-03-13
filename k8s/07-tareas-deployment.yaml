@@ -24,7 +24,7 @@ spec:
         volumeMounts:
         - name: uploads-storage
           mountPath: /app/uploads
-       volumes:
+      volumes:
       - name: uploads-storage
         persistentVolumeClaim:
           claimName: pvc-tareas-uploads
