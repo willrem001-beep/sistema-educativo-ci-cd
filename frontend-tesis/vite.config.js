@@ -30,16 +30,24 @@ export default defineConfig({
     sourcemap: false,
     rollupOptions: {
       output: {
-        manualChunks: {
+        //manualChunks como FUNCIÓN en lugar de objeto
+        manualChunks(id) {
           // Divide el código en chunks para mejor rendimiento en móviles
-          'vendor': ['react', 'react-dom', 'react-router-dom'],
-          'ui': ['lucide-react', 'react-toastify'],
-          'api': ['axios']
+          if (id.includes('node_modules')) {
+            if (id.includes('react') || id.includes('react-dom') || id.includes('react-router-dom')) {
+              return 'vendor';
+            }
+            if (id.includes('lucide-react') || id.includes('react-toastify')) {
+              return 'ui';
+            }
+            if (id.includes('axios')) {
+              return 'api';
+            }
+          }
         }
       }
     }
   },
-  // Optimización para desarrollo móvil
   optimizeDeps: {
     include: [
       'react',
@@ -49,11 +57,10 @@ export default defineConfig({
       'react-toastify',
       'lucide-react'
     ],
-    esbuildOptions: {
+    rolldownOptions: {  // Cambiado de esbuildOptions a rolldownOptions
       target: 'es2015' // Compatibilidad con móviles
     }
   },
-
   css: {
     devSourcemap: false,
     preprocessorOptions: {}
