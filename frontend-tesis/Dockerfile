@@ -1,5 +1,5 @@
 # Etapa 1: Construcción (Builder)
-FROM node:18-alpine as builder
+FROM node:20-alpine as builder
 WORKDIR /app
 COPY package*.json ./
 RUN npm install
