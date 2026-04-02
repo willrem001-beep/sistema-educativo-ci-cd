@@ -35,7 +35,6 @@ const Layout = () => {
 
   return (
     <div className="flex h-screen bg-gray-100">
-      {/* Sidebar */}
       <div className={`${sidebarOpen ? 'w-64' : 'w-20'} bg-gray-900 text-white transition-all duration-300 flex flex-col`}>
         <div className="p-4 flex items-center justify-between border-b border-gray-700">
           <h1 className={`${!sidebarOpen && 'hidden'} font-bold text-xl tracking-wider`}>TESIS K8s</h1>
@@ -84,7 +83,6 @@ const Layout = () => {
         </div>
       </div>
 
-      {/* Main Content */}
       <div className="flex-1 flex flex-col overflow-hidden">
         <header className="bg-white shadow-sm p-4">
           <h2 className="text-xl font-semibold text-gray-800 capitalize">
@@ -92,7 +90,7 @@ const Layout = () => {
           </h2>
         </header>
         <main className="flex-1 overflow-x-hidden overflow-y-auto bg-gray-100 p-6">
-          {/* Aquí se renderizará la página seleccionada (Dashboard, Usuarios, etc.) */}
+          {/* Aquí se renderizará la página seleccionada ejemplo: Dashboard, Usuarios, etc. */}
           <Outlet />
         </main>
       </div>

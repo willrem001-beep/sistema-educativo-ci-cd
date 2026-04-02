@@ -1,7 +1,6 @@
 import React, { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "../autenticacion/AuthContext";
-import { AuthProvider } from '../autenticacion/AuthContext'
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -29,18 +28,11 @@ const Login = () => {
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-100">
-      <div className="bg-white p-8 rounded-lg shadow-md w-full max-w-md">
+    <div className="flex items-center justify-center min-h-screen bg-gray-100 p-4">
+      <div className="bg-white p-6 md:p-8 rounded-lg shadow-md w-full max-w-md">
         <h2 className="text-2xl font-bold text-center mb-6 text-gray-800">
           Iniciar Sesión
         </h2>
-
-        {message && (
-          <div className="p-3 mb-4 text-red-700 bg-red-100 rounded">
-            {message}
-          </div>
-        )}
-
         <form onSubmit={handleLogin}>
           <div className="mb-4">
             <label htmlFor="email" className="block text-gray-700 text-sm font-bold mb-2">
@@ -48,7 +40,7 @@ const Login = () => {
             </label>
             <input
               id="email"
-              type="text"
+              type="email"
               className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
@@ -81,8 +73,6 @@ const Login = () => {
             {loading ? "Cargando..." : "Ingresar"}
           </button>
         </form>
-
-
       </div>
     </div>
   );

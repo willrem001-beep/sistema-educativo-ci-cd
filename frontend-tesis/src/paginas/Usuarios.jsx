@@ -16,7 +16,7 @@ const Usuarios = () => {
     nombre_completo: "",
     email: "",
     rol: "estudiante",
-    activo: true // Cambiado de 'active' a 'activo' para consistencia
+    activo: true 
   });
   
   // Seccion crear nuevos usuarios

@@ -3,21 +3,15 @@ import authHeader from "./auth-header";
 
 const API_URL = import.meta.env.VITE_API_TAREAS;
 
-// CORREGIDO: El backend espera usuario_id como query param
 const getAll = (email) => {
-  // Validación
   if (!email) {
-    console.error("Error: Email es requerido para obtener tareas");
     return Promise.reject(new Error("Email es requerido"));
   }
 
-  console.log("Obteniendo tareas para email:", email);
-
-  // IMPORTANTE: El backend usa 'usuario_id' como nombre del parámetro
   return axios.get(`${API_URL}/tareas`, {
     headers: authHeader(),
     params: {
-      usuario_id: email  // ← Cambiado de 'email' a 'usuario_id'
+      usuario_id: email
     }
   });
 };
@@ -49,7 +43,7 @@ const update = (id, data) => {
     return Promise.reject(new Error("ID es requerido"));
   }
 
-  // El backend solo actualiza titulo, descripcion y estado
+
   const datosActualizables = {
     titulo: data.titulo,
     descripcion: data.descripcion,

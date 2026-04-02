@@ -3,12 +3,13 @@ import { useAuth } from "../autenticacion/AuthContext";
 import { BookOpen, CheckCircle, Users, Clock } from "lucide-react";
 
 const Dashboard = () => {
+
   const { user } = useAuth();
 
   return (
     <div className="space-y-6">
       <div className="bg-blue-600 text-white p-6 rounded-lg shadow-md">
-        <h1 className="text-3xl font-bold">¡Bienvenido {user?.nombre_completo}!</h1>
+        <h1 className="text-3xl font-bold">¡Bienvenido, {user?.nombre}!</h1>
         <p className="mt-2 opacity-90">Sistema de Gestión Académica con enfoque en Microservicios.</p>
       </div>
 
@@ -42,7 +43,7 @@ const Dashboard = () => {
             <p className="text-black font-bold">4 Online</p>
           </div>
         </div>
-        
+
         <div className="bg-white p-6 rounded-lg shadow-md flex items-center space-x-4">
           <div className="p-3 bg-orange-100 text-orange-600 rounded-full">
             <Clock size={24} />

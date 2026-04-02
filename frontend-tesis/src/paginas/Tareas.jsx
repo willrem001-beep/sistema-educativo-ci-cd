@@ -82,7 +82,7 @@ const Tareas = () => {
       });
   };
 
-  // --- MANEJO DE ESTUDIANTES ---
+  // MANEJO DE ESTUDIANTES 
   const handleStudentToggle = (email) => {
     setNewTarea(prev => {
       const current = prev.asignados || [];
@@ -94,9 +94,8 @@ const Tareas = () => {
     });
   };
 
-  // --- SELECCIONAR TODOS LOS ESTUDIANTES ---
+  // casilla para seleccionar estudiantes
   const handleSelectAll = () => {
-    // Filtramos los estudiantes visibles para seleccionar solo los que aparecen en el filtro
     const visibleEstudiantes = estudiantes.filter(est =>
       est.nombre_completo.toLowerCase().includes(filtroEstudiantes.toLowerCase()) ||
       est.email.toLowerCase().includes(filtroEstudiantes.toLowerCase())
@@ -113,7 +112,6 @@ const Tareas = () => {
       let nuevosAsignados;
 
       if (allVisibleSelected) {
-        // Quitar visibles
         nuevosAsignados = current.filter(email => !visibleEmails.includes(email));
       } else {
         // Añadir visibles (evitando duplicados)
@@ -124,7 +122,7 @@ const Tareas = () => {
     });
   };
 
-  // --- CREAR TAREA - VERSIÓN CORREGIDA ---
+  //CREAR TAREA
   const handleCreateSubmit = (e) => {
     e.preventDefault();
 
@@ -173,14 +171,12 @@ const Tareas = () => {
     setLoading(true);
     TareasService.createWithFile(formData)
       .then((response) => {
-        console.log("Respuesta exitosa:", response.data);
         alert("Tarea creada y asignada correctamente");
         setIsCreateModalOpen(false);
         resetForm();
         fetchTareas();
       })
       .catch((error) => {
-        console.error("Error detallado:", error);
         const errorMsg = error.response?.data?.error || error.message;
         alert("Error: " + errorMsg);
       })
@@ -196,7 +192,7 @@ const Tareas = () => {
     setFiltroEstudiantes(""); // Resetear filtro
   };
 
-  // --- EDITAR TAREA ---
+  //EDITAR TAREA
   const handleOpenEdit = (tarea) => {
     setEditingTarea({
       ...tarea,
@@ -233,7 +229,7 @@ const Tareas = () => {
       });
   };
 
-  // --- ELIMINAR TAREA ---
+  //ELIMINAR TAREA
   const handleDelete = (id, titulo) => {
     if (window.confirm(`¿Estás seguro de eliminar la tarea "${titulo}"?`)) {
       setLoading(true);
@@ -249,7 +245,7 @@ const Tareas = () => {
     }
   };
 
-  // --- FUNCIONES AUXILIARES ---
+  //FUNCIONES AUXILIARES
   const formatDateForInput = (dateString) => {
     if (!dateString) return "";
     try {
@@ -402,7 +398,7 @@ const Tareas = () => {
         </div>
       )}
 
-      {/* MODAL CREAR TAREA */}
+      {/*boton para crear nuevas tareas */}
       {isCreateModalOpen && (
         <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
           <div className="relative mx-auto p-5 border w-full max-w-2xl shadow-lg rounded-md bg-white max-h-screen overflow-y-auto">
@@ -439,7 +435,7 @@ const Tareas = () => {
                 <input type="datetime-local" value={newTarea.fecha_entrega} onChange={e => setNewTarea({ ...newTarea, fecha_entrega: e.target.value })} className="w-full px-3 py-2 border rounded focus:ring-2 focus:ring-green-500 focus:border-green-500" required />
               </div>
 
-              {/* SECCIÓN DE ASIGNADOS CON BÚSQUEDA */}
+              {/* asignamos a estudiantes especificos la tarea */}
               <div>
                 <div className="flex justify-between items-center mb-1">
                   <label className="block text-sm font-medium text-gray-700">Asignar a Estudiantes</label>
@@ -447,7 +443,7 @@ const Tareas = () => {
                     {loadingEstudiantes ? "Cargando..." : (newTarea.asignados?.length === estudiantes.length ? "Deseleccionar todos" : "Seleccionar todos")}
                   </button>
                 </div>
-                {/* BUSCADOR */}
+                
                 <div className="relative mb-2">
                   <Search size={16} className="absolute left-3 top-2.5 text-gray-400" />
                   <input
@@ -458,24 +454,38 @@ const Tareas = () => {
                     className="w-full pl-9 pr-3 py-2 border rounded-md text-sm focus:ring-2 focus:ring-green-500"
                   />
                 </div>
-                <div className="border rounded p-2 h-48 overflow-y-auto bg-gray-50">
+                <div className="border rounded-lg p-2 h-48 overflow-y-auto bg-gray-50 space-y-2">
                   {loadingEstudiantes ? (
-                    <div className="text-center py-4 text-sm text-gray-500">Cargando estudiantes...</div>
+                    <div className="text-center py-4 text-sm text-gray-500">
+                      Cargando estudiantes...
+                    </div>
                   ) : estudiantesFiltrados.length === 0 ? (
-                    <p className="text-gray-500 text-sm text-center py-4">No se encontraron estudiantes.</p>
+                    <p className="text-gray-500 text-sm text-center py-4">
+                      No se encontraron estudiantes.
+                    </p>
                   ) : (
-                    estudiantesFiltrados.map(est => (
-                      <label key={est.id} className="flex items-center space-x-2 p-2 hover:bg-gray-100 rounded cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={(newTarea.asignados || []).includes(est.email)}
-                          onChange={() => handleStudentToggle(est.email)}
-                          className="rounded text-green-600 focus:ring-green-500"
-                        />
-                        <span className="text-sm">
-                          <span className="text-gray-800 font-medium">{est.nombre_completo}</span>
-                          <span className="text-gray-500 ml-2">({est.email})</span>
-                        </span>
+                    estudiantesFiltrados.map((est) => (
+                      <label
+                        key={est.id || est.email}
+                        className="grid grid-cols-[32px_1fr] items-center gap-3 rounded-lg px-3 py-2 hover:bg-gray-100 cursor-pointer transition"
+                      >
+                        <div className="flex items-center justify-center">
+                          <input
+                            type="checkbox"
+                            checked={(newTarea.asignados || []).includes(est.email)}
+                            onChange={() => handleStudentToggle(est.email)}
+                            className="h-4 w-4 cursor-pointer rounded border-gray-300 accent-green-600 focus:ring-2 focus:ring-green-500"
+                          />
+                        </div>
+
+                        <div className="min-w-0">
+                          <p className="text-sm font-semibold text-gray-800 leading-tight">
+                            {est.nombre_completo}
+                          </p>
+                          <p className="text-sm text-gray-500 break-all leading-tight">
+                            {est.email}
+                          </p>
+                        </div>
                       </label>
                     ))
                   )}
@@ -483,7 +493,6 @@ const Tareas = () => {
                 <p className="text-xs text-gray-500 mt-1">{(newTarea.asignados || []).length} estudiantes seleccionados.</p>
               </div>
 
-              {/* SUBIR PDF CON BOTÓN LIMPIAR */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Archivo PDF (Opcional)</label>
                 <div className="flex items-center space-x-2">
@@ -516,7 +525,7 @@ const Tareas = () => {
         </div>
       )}
 
-      {/* MODAL EDITAR TAREA */}
+      {/* seccion para editar */}
       {isEditModalOpen && editingTarea && (
         <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
           <div className="relative mx-auto p-5 border w-full max-w-lg shadow-lg rounded-md bg-white">

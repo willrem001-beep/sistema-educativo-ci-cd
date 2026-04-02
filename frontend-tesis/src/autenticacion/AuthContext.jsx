@@ -5,29 +5,30 @@ const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true); // Estado para saber si estamos verificando el token al inicio
+  const [loading, setLoading] = useState(true);
 
-    useEffect(() => {
-    try {
-      const user = AuthService.getCurrentUser();
-      if (user) {
-        setUser(user);
+  useEffect(() => {
+    const loadUser = () => {
+      try {
+        const userData = AuthService.getCurrentUser();
+        setUser(userData);
+      } catch (error) {
+        localStorage.removeItem("user");
+        setUser(null);
+      } finally {
+        setLoading(false);
       }
-    } catch (error) {
-      console.error("Error cargando usuario desde LocalStorage:", error);
-      localStorage.removeItem("user"); // Limpiamos el dato corrupto
-    } finally {
-      setLoading(false);
-    }
+    };
+
+    loadUser();
   }, []);
 
   const login = async (email, password) => {
     try {
       const data = await AuthService.login(email, password);
-      setUser(data);
+      setUser(data); // El login se guarda en localStorage
       return { success: true };
     } catch (error) {
-      console.error("Error en login:", error);
       return { 
         success: false, 
         message: error.response?.data?.error || "Error al iniciar sesión" 
@@ -52,7 +53,6 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  // Funciones auxiliares para proteger rutas según rol
   const isEstudiante = () => user?.rol === 'estudiante';
   const isDocente = () => user?.rol === 'docente';
   const isAdmin = () => user?.rol === 'administrador';
@@ -72,7 +72,11 @@ export const AuthProvider = ({ children }) => {
 };
 
 export const useAuth = () => {
-  return useContext(AuthContext);
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error('useAuth debe ser usado dentro de un AuthProvider');
+  }
+  return context;
 };
 
 export default AuthContext;
