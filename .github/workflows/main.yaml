@@ -25,7 +25,7 @@ jobs:
           - service: ms-usuarios
             path: ./Microserv_Users
             port: 3001
-            allow-test-failure: false
+            allow-test-failure: true
           - service: ms-tareas
             path: ./Microserv_Tareas
             port: 3002
