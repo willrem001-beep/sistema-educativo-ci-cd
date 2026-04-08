@@ -23,7 +23,7 @@ jobs:
         include:
           
           - service: ms-usuarios
-            path: ./Microserv_User
+            path: ./Microserv_Users
             port: 3001
             allow-test-failure: true
           - service: ms-tareas
