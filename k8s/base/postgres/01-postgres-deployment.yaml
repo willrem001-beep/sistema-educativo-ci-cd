@@ -19,9 +19,15 @@ spec:
         - containerPort: 5432
         env:
         - name: POSTGRES_USER
-          value: "ms_admin"
+          valueFrom:
+            secretKeyRef:
+              name: db-secrets
+              key: postgres-user
         - name: POSTGRES_PASSWORD
-          value: "MsUsuarios_2025!"
+          valueFrom:
+            secretKeyRef:
+              name: db-secrets
+              key: postgres-password
         volumeMounts:
         # Montamos sobre la carpeta de inicialización, no sobre el archivo
         - name: init-db

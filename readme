@@ -1,0 +1,11 @@
+en este archivo creamos usuario y asignamos su rol 
+DO
+$$
+BEGIN
+  IF NOT EXISTS (
+    SELECT FROM pg_roles WHERE rolname = 'usuario creado en BD'
+  ) THEN
+    CREATE ROLE rol_usuario LOGIN PASSWORD 'contraseña';
+  END IF;
+END
+$$;

@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
       - name: ms-frontend
-        image: ghcr.io/TU_USUARIO/TU_REPO/ms-frontend:latest
+        image: ghcr.io/willrem001-beep/sistema-educativo-ci-cd/ms-frontend:latest
         imagePullPolicy: Always
         ports:
         - containerPort: 80

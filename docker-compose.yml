@@ -1,17 +1,14 @@
 version: '3.8'
 
 services:
-  # ------------------------------------------------
-  # BASE DE DATOS: POSTGRESQL (Para Usuarios y Notas)
-  # ------------------------------------------------
+  # BASE DE DATOS: POSTGRESQL
   db-postgres:
     image: postgres:13-alpine
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
-      # No definimos POSTGRES_DB aquí porque el script init creará 2 bases.
     ports:
-      - "5432:5432" # Solo para debug desde PC en caos de ser necesario
+      - "5432:5432"
     volumes:
       - ./init-db-postgres.sql:/docker-entrypoint-initdb.d/init.sql
       - postgres-data:/var/lib/postgresql/data
@@ -20,13 +17,11 @@ services:
       interval: 10s
       retries: 5
 
-  # ------------------------------------------------
-  # BASE DE DATOS: MONGODB (Para Tareas y Asistencia)
-  # ------------------------------------------------
+  # BASE DE DATOS: MONGODB
   db-mongo:
     image: mongo:4.4
     ports:
-      - "27017:27017" # Solo para debug
+      - "27017:27017"
     volumes:
       - mongo-data:/data/db
     healthcheck:
@@ -34,29 +29,24 @@ services:
       interval: 10s
       retries: 5
 
-  # ------------------------------------------------
-  # MICROSERVICIO 1: USUARIOS (Node.js)
-  # ------------------------------------------------
+  # MICROSERVICIO 1: USUARIOS
   servicio-usuarios:
     build: ./Microserv_Users
     container_name: ms-usuarios
     ports:
       - "3001:3001"
     environment:
-      # Importante: Usamos el nombre del servicio 'db-postgres' mas no localhost
       DB_HOST: db-postgres
       DB_PORT: 5432
       DB_NAME: db_usuarios
-      DB_USER: ms_admin
-      DB_PASSWORD: MsUsuarios_2025!
-      JWT_SECRET: L4_cascada_es_muy_s3gur4_2025@
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      JWT_SECRET: ${JWT_SECRET}
     depends_on:
       db-postgres:
         condition: service_healthy
 
-  # ------------------------------------------------
-  # MICROSERVICIO 2: TAREAS (Node.js + MongoDB)
-  # ------------------------------------------------
+  # MICROSERVICIO 2: TAREAS
   servicio-tareas:
     build: ./Microserv_Tareas
     container_name: ms-tareas
@@ -68,9 +58,7 @@ services:
       db-mongo:
         condition: service_healthy
 
-  # ------------------------------------------------
-  # MICROSERVICIO 3: NOTAS (Node.js)
-  # ------------------------------------------------
+  # MICROSERVICIO 3: NOTAS
   servicio-notas:
     build: ./Microserv_Notas
     container_name: ms-notas
@@ -80,15 +68,13 @@ services:
       DB_HOST: db-postgres
       DB_PORT: 5432
       DB_NAME: db_notas
-      DB_USER: ms_admin
-      DB_PASSWORD: MsUsuarios_2025!
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${NOTAS_DB_PASSWORD}
     depends_on:
       db-postgres:
         condition: service_healthy
 
-  # ------------------------------------------------
-  # MICROSERVICIO 4: ASISTENCIA (Node.js + MongoDB)
-  # ------------------------------------------------
+  # MICROSERVICIO 4: ASISTENCIA
   servicio-asistencia:
     build: ./Microserv_Asistencias
     container_name: ms-asistencia
@@ -99,6 +85,26 @@ services:
     depends_on:
       db-mongo:
         condition: service_healthy
+
+  # LOKI
+  loki:
+    image: grafana/loki:3.0.0
+    container_name: loki
+    ports:
+      - "3100:3100"
+    command: -config.file=/etc/loki/local-config.yaml
+
+  # PROMTAIL
+  promtail:
+    image: grafana/promtail:3.0.0
+    container_name: promtail
+    volumes:
+      - ./promtail-config.yml:/etc/promtail/config.yml
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+      - /var/run/docker.sock:/var/run/docker.sock
+    command: -config.file=/etc/promtail/config.yml
+    depends_on:
+      - loki
 
 volumes:
   postgres-data:

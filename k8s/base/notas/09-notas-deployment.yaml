@@ -1,4 +1,3 @@
-
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -27,6 +26,12 @@ spec:
         - name: DB_NAME
           value: "db_notas"
         - name: DB_USER
-          value: "ms_admin"
+          valueFrom:
+            secretKeyRef:
+              name: db-secrets
+              key: db-user
         - name: DB_PASSWORD
-          value: "MsUsuarios_2025!"
+          valueFrom:
+            secretKeyRef:
+              name: db-secrets
+              key: db-password
