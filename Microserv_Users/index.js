@@ -6,7 +6,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 
 const app = express();
-const PORT = process.en.PORT || 3001;
+const PORT = process.env.PORT || 3001;
 
 // Middlewares
 app.use(cors());
