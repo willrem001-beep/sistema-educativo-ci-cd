@@ -130,13 +130,13 @@ jobs:
         working-directory: ./frontend-tesis
         run: |
           echo "Construyendo imagen Docker del frontend..."
-          docker build --no-cache -t my-app:latest .
-          docker images | findstr my-app
+          docker build --no-cache -t ms-frontend:latest .
+          docker images | findstr ms-frontend
       
       - name: Cargar imagen a Minikube
         run: |
           echo "Cargando imagen a Minikube..."
-          minikube image load my-app:latest
+          minikube image load ms-frontend:latest
           echo "Imagen cargada correctamente"
       
       - name: Verificar que Minikube esta corriendo
@@ -148,7 +148,7 @@ jobs:
       - name: Actualizar deployment ms-frontend
         run: |
           echo "Actualizando deployment ms-frontend con nueva imagen..."
-          kubectl set image deployment/ms-frontend ms-frontend=my-app:latest
+          kubectl set image deployment/ms-frontend ms-frontend=ghcr.io/willrem001-beep/sistema-educativo-ci-cd/ms-frontend:latest
           echo "Reiniciando deployment..."
           kubectl rollout restart deployment/ms-frontend
           echo "Esperando a que el rollout termine..."
