@@ -19,6 +19,7 @@ export default defineConfig({
     setupFiles: './src/setupTests.js',
   },
   build: {
+    outDir:'dist',
     target: 'es2015',
     minify: 'terser',
     terserOptions: {
@@ -62,6 +63,7 @@ export default defineConfig({
     }
   },
   css: {
+    postcss: false,
     devSourcemap: false,
     preprocessorOptions: {}
   },
