@@ -120,6 +120,7 @@ jobs:
         uses: actions/checkout@v4
       
       - name: Verificar herramientas
+        shell: bash
         run: |
           echo "Verificando herramientas instaladas..."
           docker --version
@@ -128,51 +129,74 @@ jobs:
       
       - name: Construir imagen Docker del frontend
         working-directory: ./frontend-tesis
+        shell: bash
         run: |
           echo "Construyendo imagen Docker del frontend..."
           docker build --no-cache -t ms-frontend:latest .
-          docker images | findstr ms-frontend
+          docker images | grep ms-frontend
       
       - name: Cargar imagen a Minikube
+        shell: bash
         run: |
           echo "Cargando imagen a Minikube..."
           minikube image load ms-frontend:latest
           echo "Imagen cargada correctamente"
       
       - name: Verificar que Minikube esta corriendo
+        shell: bash
         run: |
           echo "Verificando estado de Minikube..."
           minikube status
           kubectl get nodes
       
       - name: Actualizar deployment ms-frontend
+        shell: bash
         run: |
           echo "Actualizando deployment ms-frontend con nueva imagen..."
-          kubectl set image deployment/ms-frontend ms-frontend=ghcr.io/willrem001-beep/sistema-educativo-ci-cd/ms-frontend:latest
+          kubectl set image deployment/ms-frontend ms-frontend=ms-frontend:latest
           echo "Reiniciando deployment..."
           kubectl rollout restart deployment/ms-frontend
           echo "Esperando a que el rollout termine..."
           kubectl rollout status deployment/ms-frontend --timeout=5m
       
       - name: Verificar estado de los pods
+        shell: bash
         run: |
           echo "Estado de los pods:"
           kubectl get pods -l app=ms-frontend
           kubectl get svc ms-frontend-service
       
       - name: Verificar archivos en el contenedor
+        shell: bash
         run: |
           echo "Verificando archivos servidos por nginx..."
-          kubectl exec deployment/ms-frontend -- ls -la /usr/share/nginx/html/ || echo "No se pudieron listar los archivos"
+          if kubectl exec deployment/ms-frontend -- ls -la /usr/share/nginx/html/; then
+            echo "Archivos listados correctamente"
+          else
+            echo "No se pudieron listar los archivos"
+          fi
       
       - name: Verificar logs del pod
+        shell: bash
         run: |
           echo "Logs del pod ms-frontend:"
-          kubectl logs deployment/ms-frontend --tail=20 ; if ($?) { echo "Logs obtenidos" } else { echo "No se pudieron obtener los logs" }      
+          if kubectl logs deployment/ms-frontend --tail=20; then
+            echo "Logs obtenidos correctamente"
+          else
+            echo "No se pudieron obtener los logs"
+          fi
+      
       - name: Mostrar URL de acceso
+        shell: bash
         run: |
           echo "=========================================="
           echo "Despliegue completado con exito!"
           echo "=========================================="
           echo "URL de acceso:"
-          $url = minikube service ms-frontend-service --url ; if ($url) { echo $url } else { echo "http://localhost:30005" }          echo "=========================================="
+          URL=$(minikube service ms-frontend-service --url 2>/dev/null)
+          if [ -n "$URL" ]; then
+            echo "$URL"
+          else
+            echo "http://localhost:30005"
+          fi
+          echo "=========================================="
