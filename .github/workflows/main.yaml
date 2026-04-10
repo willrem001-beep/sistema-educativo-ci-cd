@@ -168,13 +168,11 @@ jobs:
       - name: Verificar logs del pod
         run: |
           echo "Logs del pod ms-frontend:"
-          kubectl logs deployment/ms-frontend --tail=20 || echo "No se pudieron obtener los logs"
-      
+          kubectl logs deployment/ms-frontend --tail=20 ; if ($?) { echo "Logs obtenidos" } else { echo "No se pudieron obtener los logs" }      
       - name: Mostrar URL de acceso
         run: |
           echo "=========================================="
           echo "Despliegue completado con exito!"
           echo "=========================================="
           echo "URL de acceso:"
-          minikube service ms-frontend-service --url || echo "http://localhost:30005"
-          echo "=========================================="
+          $url = minikube service ms-frontend-service --url ; if ($url) { echo $url } else { echo "http://localhost:30005" }          echo "=========================================="
