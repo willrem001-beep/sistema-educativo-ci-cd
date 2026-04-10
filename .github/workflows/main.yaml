@@ -165,13 +165,4 @@ jobs:
           Write-Host "Estado de los pods:"
           kubectl get pods -l app=ms-frontend
           kubectl get svc ms-frontend-service
-      
-      - name: Mostrar URL de acceso
-        shell: powershell
-        run: |
-          Write-Host "=========================================="
-          Write-Host "Despliegue completado con exito!"
-          Write-Host "=========================================="
-          Write-Host "URL de acceso:"
-          minikube service ms-frontend-service --url
-          Write-Host "=========================================="
+    
