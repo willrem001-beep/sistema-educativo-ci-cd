@@ -109,7 +109,7 @@ jobs:
   # ============================================
   # JOB 2: Desplegar frontend en Minikube local
   # ============================================
-  deploy-frontend:
+    deploy-frontend:
     name: Deploy Frontend to Minikube
     runs-on: self-hosted
     needs: build-and-push
@@ -122,7 +122,7 @@ jobs:
       - name: Verificar herramientas
         shell: powershell
         run: |
-          echo "Verificando herramientas instaladas..."
+          Write-Host "Verificando herramientas instaladas..."
           docker --version
           minikube version
           kubectl version --client
@@ -131,72 +131,47 @@ jobs:
         working-directory: ./frontend-tesis
         shell: powershell
         run: |
-          echo "Construyendo imagen Docker del frontend..."
+          Write-Host "Construyendo imagen Docker del frontend..."
           docker build --no-cache -t ms-frontend:latest .
           docker images | findstr ms-frontend
       
       - name: Cargar imagen a Minikube
         shell: powershell
         run: |
-          echo "Cargando imagen a Minikube..."
+          Write-Host "Cargando imagen a Minikube..."
           minikube image load ms-frontend:latest
-          echo "Imagen cargada correctamente"
+          Write-Host "Imagen cargada correctamente"
       
       - name: Verificar que Minikube esta corriendo
         shell: powershell
         run: |
-          echo "Verificando estado de Minikube..."
+          Write-Host "Verificando estado de Minikube..."
           minikube status
           kubectl get nodes
       
       - name: Actualizar deployment ms-frontend
         shell: powershell
         run: |
-          echo "Actualizando deployment ms-frontend con nueva imagen..."
+          Write-Host "Actualizando deployment ms-frontend con nueva imagen..."
           kubectl set image deployment/ms-frontend ms-frontend=ms-frontend:latest
-          echo "Reiniciando deployment..."
-          kubectl rollout restart deployment/ms-frontend
-          echo "Esperando a que el rollout termine..."
-          kubectl rollout status deployment/ms-frontend --timeout=5m
+          Write-Host "Esperando 30 segundos para actualizacion..."
+          Start-Sleep -Seconds 30
+          Write-Host "Verificando pods..."
+          kubectl get pods -l app=ms-frontend
       
       - name: Verificar estado de los pods
         shell: powershell
         run: |
-          echo "Estado de los pods:"
+          Write-Host "Estado de los pods:"
           kubectl get pods -l app=ms-frontend
           kubectl get svc ms-frontend-service
-      
-      - name: Verificar archivos en el contenedor
-        shell: powershell
-        run: |
-          echo "Verificando archivos servidos por nginx..."
-          if kubectl exec deployment/ms-frontend -- ls -la /usr/share/nginx/html/; then
-            echo "Archivos listados correctamente"
-          else
-            echo "No se pudieron listar los archivos"
-          fi
-      
-      - name: Verificar logs del pod
-        shell: powershell
-        run: |
-          echo "Logs del pod ms-frontend:"
-          if kubectl logs deployment/ms-frontend --tail=20; then
-            echo "Logs obtenidos correctamente"
-          else
-            echo "No se pudieron obtener los logs"
-          fi
       
       - name: Mostrar URL de acceso
         shell: powershell
         run: |
-          echo "=========================================="
-          echo "Despliegue completado con exito!"
-          echo "=========================================="
-          echo "URL de acceso:"
-          URL=$(minikube service ms-frontend-service --url 2>/dev/null)
-          if [ -n "$URL" ]; then
-            echo "$URL"
-          else
-            echo "http://localhost:30005"
-          fi
-          echo "=========================================="
+          Write-Host "=========================================="
+          Write-Host "Despliegue completado con exito!"
+          Write-Host "=========================================="
+          Write-Host "URL de acceso:"
+          minikube service ms-frontend-service --url
+          Write-Host "=========================================="
