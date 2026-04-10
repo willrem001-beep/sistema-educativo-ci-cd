@@ -133,7 +133,7 @@ jobs:
         run: |
           echo "Construyendo imagen Docker del frontend..."
           docker build --no-cache -t ms-frontend:latest .
-          docker images | grep ms-frontend
+          docker images | findstr ms-frontend
       
       - name: Cargar imagen a Minikube
         shell: powershell
