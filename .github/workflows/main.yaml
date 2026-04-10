@@ -43,11 +43,11 @@ jobs:
           - service: ms-frontend
             path: ./frontend-tesis
             port: 80
-            allow-test-failure: true  # Cambia a false cuando tengas tests
+            allow-test-failure: true
       fail-fast: false
 
     steps:
-      - name: Checkout del código
+      - name: Checkout del codigo
         uses: actions/checkout@v4
 
       - name: Setup Node.js
@@ -58,7 +58,7 @@ jobs:
       - name: Install Dependencies & Run Tests
         working-directory: ${{ matrix.path }}
         run: |
-          echo "🧪 Ejecutando tests en ${{ matrix.service }}..."
+          echo "Ejecutando tests en ${{ matrix.service }}..."
           npm ci
           npm test || ${{ matrix.allow-test-failure && 'true' || 'exit 1' }}
 
@@ -104,7 +104,7 @@ jobs:
       - name: Verificar imagen
         if: github.event_name != 'pull_request'
         run: |
-          echo "✅ Imagen ${{ matrix.service }} construida y subida a GHCR"
+          echo "Imagen ${{ matrix.service }} construida y subida a GHCR"
 
   # ============================================
   # JOB 2: Desplegar frontend en Minikube local
@@ -116,12 +116,12 @@ jobs:
     if: github.event_name == 'push'
     
     steps:
-      - name: Checkout del código
+      - name: Checkout del codigo
         uses: actions/checkout@v4
       
       - name: Verificar herramientas
         run: |
-          echo "🔧 Verificando herramientas instaladas..."
+          echo "Verificando herramientas instaladas..."
           docker --version
           minikube version
           kubectl version --client
@@ -129,55 +129,52 @@ jobs:
       - name: Construir imagen Docker del frontend
         working-directory: ./frontend-tesis
         run: |
-          echo "🔨 Construyendo imagen Docker del frontend..."
+          echo "Construyendo imagen Docker del frontend..."
           docker build --no-cache -t my-app:latest .
           docker images | findstr my-app
       
       - name: Cargar imagen a Minikube
         run: |
-          echo "📦 Cargando imagen a Minikube..."
+          echo "Cargando imagen a Minikube..."
           minikube image load my-app:latest
-          echo "✅ Imagen cargada correctamente"
+          echo "Imagen cargada correctamente"
       
-      - name: Verificar que Minikube está corriendo
+      - name: Verificar que Minikube esta corriendo
         run: |
-          echo "🔄 Verificando estado de Minikube..."
+          echo "Verificando estado de Minikube..."
           minikube status
           kubectl get nodes
       
-      - name: Reiniciar deployment
+      - name: Actualizar deployment ms-frontend
         run: |
-          echo "🔄 Reiniciando deployment my-app..."
-          kubectl rollout restart deployment/my-app
-          echo "⏳ Esperando a que el rollout termine..."
-          kubectl rollout status deployment/my-app --timeout=5m
+          echo "Actualizando deployment ms-frontend con nueva imagen..."
+          kubectl set image deployment/ms-frontend ms-frontend=my-app:latest
+          echo "Reiniciando deployment..."
+          kubectl rollout restart deployment/ms-frontend
+          echo "Esperando a que el rollout termine..."
+          kubectl rollout status deployment/ms-frontend --timeout=5m
       
       - name: Verificar estado de los pods
         run: |
-          echo "📊 Estado de los pods:"
-          kubectl get pods -l app=my-app
-          kubectl get svc my-app-service
+          echo "Estado de los pods:"
+          kubectl get pods -l app=ms-frontend
+          kubectl get svc ms-frontend-service
       
       - name: Verificar archivos en el contenedor
         run: |
-          echo "📁 Verificando archivos servidos por nginx..."
-          kubectl exec deployment/my-app -- ls -la /usr/share/nginx/html/ || echo "⚠️ No se pudieron listar los archivos"
+          echo "Verificando archivos servidos por nginx..."
+          kubectl exec deployment/ms-frontend -- ls -la /usr/share/nginx/html/ || echo "No se pudieron listar los archivos"
       
       - name: Verificar logs del pod
         run: |
-          echo "📋 Logs del pod my-app:"
-          kubectl logs deployment/my-app --tail=20 || echo "⚠️ No se pudieron obtener los logs"
-      
-      - name: Probar endpoint HTTP
-        run: |
-          echo "🌐 Probando endpoint HTTP..."
-          kubectl run test-connection --image=busybox --rm -it --restart=Never --rm -- wget -qO- http://my-app-service:80 || echo "⚠️ No se pudo conectar"
+          echo "Logs del pod ms-frontend:"
+          kubectl logs deployment/ms-frontend --tail=20 || echo "No se pudieron obtener los logs"
       
       - name: Mostrar URL de acceso
         run: |
           echo "=========================================="
-          echo "✅ Despliegue completado con éxito!"
+          echo "Despliegue completado con exito!"
           echo "=========================================="
-          echo "🌐 URL de acceso:"
-          minikube service my-app-service --url || echo "http://localhost:30080"
+          echo "URL de acceso:"
+          minikube service ms-frontend-service --url || echo "http://localhost:30005"
           echo "=========================================="
