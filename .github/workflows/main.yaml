@@ -109,7 +109,7 @@ jobs:
   # ============================================
   # JOB 2: Desplegar frontend en Minikube local
   # ============================================
-    deploy-frontend:
+  deploy-frontend:
     name: Deploy Frontend to Minikube
     runs-on: self-hosted
     needs: build-and-push
