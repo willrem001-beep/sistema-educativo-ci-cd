@@ -6,6 +6,7 @@ WORKDIR /app
 # Copiar archivos de configuración
 COPY package*.json ./
 COPY vite.config.js ./
+COPY .env ./.env
 
 # Instalar dependencias
 RUN npm ci
