@@ -10,6 +10,7 @@ import Tareas from './paginas/Tareas'
 import Materias from './paginas/Materias'
 import Notas from './paginas/Notas'
 import Asistencia from './paginas/Asistencia'
+import './index.css'
 
 // Componente para proteger rutas
 const PrivateRoute = ({ children }) => {
