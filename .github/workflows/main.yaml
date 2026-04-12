@@ -70,6 +70,49 @@ steps:
     run: |
       kubectl get nodes
 
+  - name: Ver deployments existentes
+    shell: powershell
+    run: |
+      kubectl get deployments
+
+  # LOGIN GHCR EN MINIKUBE (CLAVE)
+  - name: Login GHCR en nodo local
+    shell: powershell
+    run: |
+      echo $env:GITHUB_TOKEN | docker login ghcr.io -u $env:GITHUB_ACTOR --password-stdin
+
+  # DEPLOY FRONTEND
+  - name: Deploy Frontend
+    shell: powershell
+    run: |
+      kubectl set image deployment/ms-frontend ms-frontend=ghcr.io/${{ github.repository }}/ms-frontend:${{ github.sha }}
+      kubectl rollout status deployment/ms-frontend
+      kubectl get pods -l app=ms-frontend
+
+  # 🔍 DEBUG SI FALLA
+  - name: Debug pods
+    if: failure()
+    shell: powershell
+    run: |
+      kubectl get pods
+      kubectl describe pods
+  - name: Debug URLs en frontend
+    shell: powershell
+    run: |
+      kubectl exec deployment/ms-frontend -- printenv | findstr VITE
+```
+
+
+```
+steps:
+  - name: Checkout
+    uses: actions/checkout@v4
+
+  - name: Verificar cluster
+    shell: powershell
+    run: |
+      kubectl get nodes
+
   # ACTUALIZAR FRONTEND
   - name: Deploy Frontend
     shell: powershell
@@ -110,8 +153,5 @@ steps:
     shell: powershell
     run: |
       kubectl get pods
-  - name: Debug URLs en frontend
-    shell: powershell
-    run: |
-      kubectl exec deployment/ms-frontend -- printenv | findstr VITE
+  
 ```
