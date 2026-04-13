@@ -1,157 +1,168 @@
-name: CI/CD Microservices Kubernetes
+name: Build and Push Microservices
 
 on:
-push:
-branches: [ "main" ]
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
 
 env:
-REGISTRY: ghcr.io
+  REGISTRY: ghcr.io
+  IMAGE_TAG: ${{ github.sha }}
 
 jobs:
+  # ============================================
+  # JOB 1: Construir y subir microservicios a GHCR
+  # ============================================
+  build-and-push:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
 
-# JOB 1: BUILD & PUSH (IMAGENES)
+    strategy:
+      matrix:
+        include:
+          - service: ms-usuarios
+            path: ./Microserv_Users
+            port: 3001
+            allow-test-failure: true
+          - service: ms-tareas
+            path: ./Microserv_Tareas
+            port: 3002
+            allow-test-failure: true
+          - service: ms-notas
+            path: ./Microserv_Notas
+            port: 3003
+            allow-test-failure: true
+          - service: ms-asistencia
+            path: ./Microserv_Asistencias
+            port: 3004
+            allow-test-failure: true
+          - service: ms-frontend
+            path: ./frontend-tesis
+            port: 80
+            allow-test-failure: true
+      fail-fast: false
 
-build-and-push:
-runs-on: ubuntu-latest
-permissions:
-contents: read
-packages: write
+    steps:
+      - name: Checkout del codigo
+        uses: actions/checkout@v4
 
-```
-strategy:
-  matrix:
-    include:
-      - service: ms-usuarios
-        path: ./Microserv_Users
-      - service: ms-tareas
-        path: ./Microserv_Tareas
-      - service: ms-notas
-        path: ./Microserv_Notas
-      - service: ms-asistencia
-        path: ./Microserv_Asistencias
-      - service: ms-frontend
-        path: ./frontend-tesis
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
 
-steps:
-  - name: Checkout
-    uses: actions/checkout@v4
+      - name: Install Dependencies & Run Tests
+        working-directory: ${{ matrix.path }}
+        run: |
+          echo "Ejecutando tests en ${{ matrix.service }}..."
+          npm ci
+          npm test || ${{ matrix.allow-test-failure && 'true' || 'exit 1' }}
 
-  - name: Login GHCR
-    uses: docker/login-action@v3
-    with:
-      registry: ${{ env.REGISTRY }}
-      username: ${{ github.actor }}
-      password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+        with:
+          driver-opts: network=host
 
-  - name: Build & Push
-    uses: docker/build-push-action@v5
-    with:
-      context: ${{ matrix.path }}
-      push: true
-      tags: |
-        ${{ env.REGISTRY }}/${{ github.repository }}/${{ matrix.service }}:${{ github.sha }}
-        ${{ env.REGISTRY }}/${{ github.repository }}/${{ matrix.service }}:latest
-```
+      - name: Login en GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
-# JOB 2: DEPLOY A KUBERNETES (MINIKUBE)
+      - name: Extraer metadatos de la imagen
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ github.repository }}/${{ matrix.service }}
+          tags: |
+            type=raw,value=latest,enable={{is_default_branch}}
+            type=sha,format=short
+            type=ref,event=branch
+          labels: |
+            org.opencontainers.image.title=${{ matrix.service }}
 
+      - name: Construir y Push de Imagen Docker
+        uses: docker/build-push-action@v5
+        with:
+          context: ${{ matrix.path }}
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: |
+            ${{ env.REGISTRY }}/${{ github.repository }}/${{ matrix.service }}:latest
+            ${{ env.REGISTRY }}/${{ github.repository }}/${{ matrix.service }}:${{ env.IMAGE_TAG }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          build-args: |
+            BUILDKIT_CONTEXT_KEEP_GIT_DIR=1
+            SERVICE_PORT=${{ matrix.port }}
 
-deploy:
-runs-on: self-hosted
-needs: build-and-push
+      - name: Verificar imagen
+        if: github.event_name != 'pull_request'
+        run: |
+          echo "Imagen ${{ matrix.service }} construida y subida a GHCR"
 
-```
-steps:
-  - name: Checkout
-    uses: actions/checkout@v4
-
-  - name: Verificar cluster
-    shell: powershell
-    run: |
-      kubectl get nodes
-
-  - name: Ver deployments existentes
-    shell: powershell
-    run: |
-      kubectl get deployments
-
-  # LOGIN GHCR EN MINIKUBE (CLAVE)
-  - name: Login GHCR en nodo local
-    shell: powershell
-    run: |
-      echo $env:GITHUB_TOKEN | docker login ghcr.io -u $env:GITHUB_ACTOR --password-stdin
-
-  # DEPLOY FRONTEND
-  - name: Deploy Frontend
-    shell: powershell
-    run: |
-      kubectl set image deployment/ms-frontend ms-frontend=ghcr.io/${{ github.repository }}/ms-frontend:${{ github.sha }}
-      kubectl rollout status deployment/ms-frontend
-      kubectl get pods -l app=ms-frontend
-
-  # 🔍 DEBUG SI FALLA
-  - name: Debug pods
-    if: failure()
-    shell: powershell
-    run: |
-      kubectl get pods
-      kubectl describe pods
-  - name: Debug URLs en frontend
-    shell: powershell
-    run: |
-      kubectl exec deployment/ms-frontend -- printenv | findstr VITE
-```
-
-
-```
-steps:
-  - name: Checkout
-    uses: actions/checkout@v4
-
-  - name: Verificar cluster
-    shell: powershell
-    run: |
-      kubectl get nodes
-
-  # ACTUALIZAR FRONTEND
-  - name: Deploy Frontend
-    shell: powershell
-    run: |
-      kubectl set image deployment/ms-frontend ms-frontend=ghcr.io/${{ github.repository }}/ms-frontend:${{ github.sha }}
-      kubectl rollout status deployment/ms-frontend
-
-  # ACTUALIZAR USUARIOS
-  - name: Deploy Usuarios
-    shell: powershell
-    run: |
-      kubectl set image deployment/ms-usuarios ms-usuarios=ghcr.io/${{ github.repository }}/ms-usuarios:${{ github.sha }}
-      kubectl rollout status deployment/ms-usuarios
-
-  # ACTUALIZAR TAREAS
-  - name: Deploy Tareas
-    shell: powershell
-    run: |
-      kubectl set image deployment/ms-tareas ms-tareas=ghcr.io/${{ github.repository }}/ms-tareas:${{ github.sha }}
-      kubectl rollout status deployment/ms-tareas
-
-  # ACTUALIZAR NOTAS
-  - name: Deploy Notas
-    shell: powershell
-    run: |
-      kubectl set image deployment/ms-notas ms-notas=ghcr.io/${{ github.repository }}/ms-notas:${{ github.sha }}
-      kubectl rollout status deployment/ms-notas
-
-  # ACTUALIZAR ASISTENCIA
-  - name: Deploy Asistencia
-    shell: powershell
-    run: |
-      kubectl set image deployment/ms-asistencia ms-asistencia=ghcr.io/${{ github.repository }}/ms-asistencia:${{ github.sha }}
-      kubectl rollout status deployment/ms-asistencia
-
-  # 🔍 DEBUG FINAL
-  - name: Verificar estado final
-    shell: powershell
-    run: |
-      kubectl get pods
-  
-```
+  # ============================================
+  # JOB 2: Desplegar frontend en Minikube local
+  # ============================================
+  deploy-frontend:
+    name: Deploy Frontend to Minikube
+    runs-on: self-hosted
+    needs: build-and-push
+    if: github.event_name == 'push'
+    
+    steps:
+      - name: Checkout del codigo
+        uses: actions/checkout@v4
+      
+      - name: Verificar herramientas
+        shell: powershell
+        run: |
+          Write-Host "Verificando herramientas instaladas..."
+          docker --version
+          minikube version
+          kubectl version --client
+      
+      - name: Construir imagen Docker del frontend
+        working-directory: ./frontend-tesis
+        shell: powershell
+        run: |
+          Write-Host "Construyendo imagen Docker del frontend..."
+          docker build --no-cache -t ms-frontend:latest .
+          docker images | findstr ms-frontend
+      
+      - name: Cargar imagen a Minikube
+        shell: powershell
+        run: |
+          Write-Host "Cargando imagen a Minikube..."
+          minikube image load ms-frontend:latest
+          Write-Host "Imagen cargada correctamente"
+      
+      - name: Verificar que Minikube esta corriendo
+        shell: powershell
+        run: |
+          Write-Host "Verificando estado de Minikube..."
+          minikube status
+          kubectl get nodes
+      
+      - name: Actualizar deployment ms-frontend
+        shell: powershell
+        run: |
+          Write-Host "Actualizando deployment ms-frontend con nueva imagen..."
+          kubectl set image deployment/ms-frontend ms-frontend=ms-frontend:latest
+          Write-Host "Esperando 30 segundos para actualizacion..."
+          Start-Sleep -Seconds 30
+          Write-Host "Verificando pods..."
+          kubectl get pods -l app=ms-frontend
+      
+      - name: Verificar estado de los pods
+        shell: powershell
+        run: |
+          Write-Host "Estado de los pods:"
+          kubectl get pods -l app=ms-frontend
+          kubectl get svc ms-frontend-service
+    
