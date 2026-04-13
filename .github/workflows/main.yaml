@@ -152,13 +152,14 @@ jobs:
       - name: Actualizar deployment ms-frontend
         shell: powershell
         run: |
-          Write-Host "Actualizando deployment ms-frontend con nueva imagen..."
-          kubectl set image deployment/ms-frontend ms-frontend=ms-frontend:latest
-          Write-Host "Esperando 30 segundos para actualizacion..."
-          Start-Sleep -Seconds 30
-          Write-Host "Verificando pods..."
+          kubectl set image deployment/ms-frontend `
+          ms-frontend=ghcr.io/${{ github.repository }}/ms-frontend:${{ github.sha }}
+
+          kubectl rollout status deployment/ms-frontend
+      - name: Verificar rollout
+        run: |
+          kubectl rollout status deployment/ms-frontend
           kubectl get pods -l app=ms-frontend
-      
       - name: Verificar estado de los pods
         shell: powershell
         run: |
