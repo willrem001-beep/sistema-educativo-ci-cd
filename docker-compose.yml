@@ -1,4 +1,4 @@
-version: '3.8'
+#version: '3.8'
 
 services:
   # BASE DE DATOS: POSTGRESQL
@@ -86,13 +86,17 @@ services:
       db-mongo:
         condition: service_healthy
 
-  # LOKI
+   # LOKI
+    # LOKI - Sin archivo de configuración externo
   loki:
     image: grafana/loki:3.0.0
     container_name: loki
     ports:
       - "3100:3100"
     command: -config.file=/etc/loki/local-config.yaml
+    restart: unless-stopped
+
+    
 
   # PROMTAIL
   promtail:
@@ -103,9 +107,38 @@ services:
       - /var/lib/docker/containers:/var/lib/docker/containers:ro
       - /var/run/docker.sock:/var/run/docker.sock
     command: -config.file=/etc/promtail/config.yml
+    restart: unless-stopped
+    
+    # GRAFANA
+  grafana:
+    image: grafana/grafana:11.2.2
+    container_name: grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_INSTALL_PLUGINS=grafana-lokiexplore-app
+    volumes:
+      - grafana-data:/var/lib/grafana
     depends_on:
       - loki
+    restart: unless-stopped
+  
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+    restart: unless-stopped
 
 volumes:
   postgres-data:
   mongo-data:
+  loki-data:
+  grafana-data:
+  prometheus_data:
