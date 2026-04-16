@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import TareasService from "../servicios/tareas.service";
 import UsuariosService from "../servicios/usuarios.service";
 import { useAuth } from "../autenticacion/AuthContext";
@@ -6,11 +6,10 @@ import { Plus, Save, X, Users, GraduationCap, Search } from "lucide-react";
 
 const Materias = () => {
   const { user, isAdmin, isDocente } = useAuth();
-  const [materias, setMaterias] = useState([]);
+  //const [materias, setMaterias] = useState([]);
   const [estudiantes, setEstudiantes] = useState([]);
   const [docentes, setDocentes] = useState([]);
   const [loading, setLoading] = useState(true);
-
   // Estados del Modal
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingMateria, setEditingMateria] = useState(null);
@@ -27,13 +26,11 @@ const Materias = () => {
         setLoading(false);
       });
   };
-
   const fetchDocentes = () => {
     UsuariosService.getAll().then(res => {
       setDocentes(res.data.filter(u => u.rol === 'docente'));
     });
   };
-
   const fetchEstudiantes = () => {
     UsuariosService.getAll().then(res => {
       setEstudiantes(res.data.filter(u => u.rol === 'estudiante'));
@@ -49,7 +46,7 @@ const Materias = () => {
     if (isDocente()) {
       fetchEstudiantes(); // Para gestionar mi lista
     }
-  }, [user, isAdmin, isDocente, fetchMaterias]);
+  }, [user, isAdmin, isDocente]);
 
 
   const handleOpenCreate = () => {

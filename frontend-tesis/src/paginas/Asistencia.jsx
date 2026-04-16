@@ -1,44 +1,44 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import AsistenciaService from "../servicios/asistencia.service";
 import TareasService from "../servicios/tareas.service";
 import UsuariosService from "../servicios/usuarios.service";
 import { useAuth } from "../autenticacion/AuthContext";
 import { Plus, Calendar, X, Search, Trash2 } from "lucide-react";
 
-  const fetchLogs = () => {
-    setLoading(true);
-    const filterId = isEstudiante() ? user.email : "";
-    
-    AsistenciaService.getAll(filterId)
-      .then(res => {
-        setLogs(res.data || []);
-        setError("");
-      })
-      .catch(err => {
-        console.error("Error cargando logs:", err);
-        setError("No se pudieron cargar los registros de asistencia");
-      })
-      .finally(() => setLoading(false));
-  };
+const fetchLogs = () => {
+  setLoading(true);
+  const filterId = isEstudiante() ? user.email : "";
 
-  const fetchMaterias = () => {
-    const filter = isDocente() ? { docente_id: user.email } : {};
-    
-    TareasService.getAllMaterias(filter)
-      .then(res => {
-        setMaterias(res.data || []);
-      })
-      .catch(err => console.error("Error cargando materias:", err));
-  };
+  AsistenciaService.getAll(filterId)
+    .then(res => {
+      setLogs(res.data || []);
+      setError("");
+    })
+    .catch(err => {
+      console.error("Error cargando logs:", err);
+      setError("No se pudieron cargar los registros de asistencia");
+    })
+    .finally(() => setLoading(false));
+};
 
-  const fetchEstudiantes = () => {
-    UsuariosService.getAll()
-      .then(res => {
-        const soloEstudiantes = res.data.filter(u => u.rol === 'estudiante');
-        setEstudiantes(soloEstudiantes);
-      })
-      .catch(err => console.error("Error cargando estudiantes:", err));
-  };
+const fetchMaterias = () => {
+  const filter = isDocente() ? { docente_id: user.email } : {};
+
+  TareasService.getAllMaterias(filter)
+    .then(res => {
+      setMaterias(res.data || []);
+    })
+    .catch(err => console.error("Error cargando materias:", err));
+};
+
+const fetchEstudiantes = () => {
+  UsuariosService.getAll()
+    .then(res => {
+      const soloEstudiantes = res.data.filter(u => u.rol === 'estudiante');
+      setEstudiantes(soloEstudiantes);
+    })
+    .catch(err => console.error("Error cargando estudiantes:", err));
+};
 
 const Asistencia = () => {
   const { user, isDocente, isEstudiante, isAdmin } = useAuth();
@@ -62,7 +62,7 @@ const Asistencia = () => {
     if (!user?.email) return;
 
     fetchLogs();
-    
+
     if (isDocente() || isAdmin()) {
       fetchMaterias();
       fetchEstudiantes();
@@ -137,7 +137,7 @@ const Asistencia = () => {
   };
 
   // Filtrar estudiantes para el buscador
-  const estudiantesFiltrados = estudiantes.filter(est => 
+  const estudiantesFiltrados = estudiantes.filter(est =>
     est.nombre_completo?.toLowerCase().includes(filtroEstudiantes.toLowerCase()) ||
     est.email?.toLowerCase().includes(filtroEstudiantes.toLowerCase())
   );
@@ -157,7 +157,7 @@ const Asistencia = () => {
         <h2 className="text-2xl font-bold text-gray-800">
           {isEstudiante() ? "Mi Historial de Asistencia" : "Gestión de Asistencia"}
         </h2>
-        
+
         {(isDocente() || isAdmin()) && (
           <button
             onClick={handleOpenModal}
@@ -173,7 +173,7 @@ const Asistencia = () => {
       {error && (
         <div className="p-4 bg-red-100 text-red-700 rounded-lg">
           {error}
-          <button 
+          <button
             onClick={fetchLogs}
             className="ml-4 text-sm underline hover:no-underline"
           >
@@ -194,8 +194,8 @@ const Asistencia = () => {
         <div className="bg-white shadow-md rounded-lg overflow-hidden">
           {logs.length === 0 ? (
             <div className="p-8 text-center text-gray-500">
-              {isEstudiante() 
-                ? "No tienes registros de asistencia aún." 
+              {isEstudiante()
+                ? "No tienes registros de asistencia aún."
                 : "No hay registros de asistencia en el sistema."}
             </div>
           ) : (
@@ -227,7 +227,7 @@ const Asistencia = () => {
                 <tbody className="bg-white divide-y divide-gray-200">
                   {logs.map((log) => {
                     const estudiante = estudiantes.find(e => e.email === log.usuario_id);
-                    
+
                     return (
                       <tr key={log._id} className="hover:bg-gray-50">
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
@@ -236,7 +236,7 @@ const Asistencia = () => {
                             {formatDate(log.fecha_hora_entrada || log.fecha)}
                           </div>
                         </td>
-                        
+
                         {(isDocente() || isAdmin()) && (
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
                             {estudiante?.nombre_completo || log.usuario_id}
@@ -246,7 +246,7 @@ const Asistencia = () => {
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                           {log.materia}
                         </td>
-                        
+
                         <td className="px-6 py-4 whitespace-nowrap text-center">
                           <span className={getStatusColor(log.estado)}>
                             {log.estado?.toUpperCase() || "PENDIENTE"}
@@ -255,7 +255,7 @@ const Asistencia = () => {
 
                         {(isDocente() || isAdmin()) && (
                           <td className="px-6 py-4 whitespace-nowrap text-center">
-                            <button 
+                            <button
                               onClick={() => handleDelete(log._id)}
                               className="text-red-600 hover:text-red-900 transition-colors"
                               title="Eliminar registro"
@@ -280,24 +280,24 @@ const Asistencia = () => {
           <div className="relative mx-auto p-5 border w-full max-w-lg shadow-lg rounded-md bg-white">
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-lg font-bold text-gray-900">Registrar Asistencia</h3>
-              <button 
+              <button
                 onClick={() => setIsModalOpen(false)}
                 className="hover:text-gray-700"
               >
                 <X size={24} />
               </button>
             </div>
-            
+
             <form onSubmit={handleSubmit} className="space-y-4">
               {/* MATERIA */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Materia <span className="text-red-500">*</span>
                 </label>
-                <select 
-                  name="materia" 
-                  value={formData.materia} 
-                  onChange={e => setFormData({...formData, materia: e.target.value})}
+                <select
+                  name="materia"
+                  value={formData.materia}
+                  onChange={e => setFormData({ ...formData, materia: e.target.value })}
                   className="w-full px-3 py-2 border rounded focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
                   required
                 >
@@ -315,12 +315,12 @@ const Asistencia = () => {
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Estudiante <span className="text-red-500">*</span>
                 </label>
-                
+
                 {/* Buscador */}
                 <div className="relative mb-2">
                   <Search size={16} className="absolute left-3 top-2.5 text-gray-400" />
-                  <input 
-                    type="text" 
+                  <input
+                    type="text"
                     placeholder="Buscar estudiante por nombre o email..."
                     value={filtroEstudiantes}
                     onChange={(e) => setFiltroEstudiantes(e.target.value)}
@@ -331,7 +331,7 @@ const Asistencia = () => {
                 <select
                   name="usuario_id"
                   value={formData.usuario_id}
-                  onChange={e => setFormData({...formData, usuario_id: e.target.value})}
+                  onChange={e => setFormData({ ...formData, usuario_id: e.target.value })}
                   className="w-full px-3 py-2 border rounded focus:ring-2 focus:ring-teal-500 focus:border-teal-500 bg-white"
                   required
                 >
@@ -351,34 +351,34 @@ const Asistencia = () => {
                 </label>
                 <div className="flex space-x-6">
                   <label className="flex items-center space-x-2 cursor-pointer">
-                    <input 
-                      type="radio" 
-                      name="estado" 
-                      value="presente" 
+                    <input
+                      type="radio"
+                      name="estado"
+                      value="presente"
                       checked={formData.estado === 'presente'}
-                      onChange={() => setFormData({...formData, estado: 'presente'})}
+                      onChange={() => setFormData({ ...formData, estado: 'presente' })}
                       className="text-teal-600 focus:ring-teal-500"
                     />
                     <span className="text-green-600 font-medium">Presente</span>
                   </label>
                   <label className="flex items-center space-x-2 cursor-pointer">
-                    <input 
-                      type="radio" 
-                      name="estado" 
-                      value="tarde" 
+                    <input
+                      type="radio"
+                      name="estado"
+                      value="tarde"
                       checked={formData.estado === 'tarde'}
-                      onChange={() => setFormData({...formData, estado: 'tarde'})}
+                      onChange={() => setFormData({ ...formData, estado: 'tarde' })}
                       className="text-teal-600 focus:ring-teal-500"
                     />
                     <span className="text-orange-600 font-medium">Tarde</span>
                   </label>
                   <label className="flex items-center space-x-2 cursor-pointer">
-                    <input 
-                      type="radio" 
-                      name="estado" 
-                      value="falta" 
+                    <input
+                      type="radio"
+                      name="estado"
+                      value="falta"
                       checked={formData.estado === 'falta'}
-                      onChange={() => setFormData({...formData, estado: 'falta'})}
+                      onChange={() => setFormData({ ...formData, estado: 'falta' })}
                       className="text-teal-600 focus:ring-teal-500"
                     />
                     <span className="text-red-600 font-medium">Falta</span>
@@ -388,15 +388,15 @@ const Asistencia = () => {
 
               {/* BOTONES */}
               <div className="flex justify-end space-x-3 pt-4">
-                <button 
-                  type="button" 
-                  onClick={() => setIsModalOpen(false)} 
+                <button
+                  type="button"
+                  onClick={() => setIsModalOpen(false)}
                   className="px-4 py-2 bg-gray-300 text-gray-800 rounded hover:bg-gray-400 transition-colors"
                 >
                   Cancelar
                 </button>
-                <button 
-                  type="submit" 
+                <button
+                  type="submit"
                   className="px-4 py-2 bg-teal-600 text-white rounded hover:bg-teal-700 transition-colors"
                   disabled={loading}
                 >
