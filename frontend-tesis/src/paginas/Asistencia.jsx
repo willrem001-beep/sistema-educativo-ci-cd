@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from "react";
 import { useAuth } from "../autenticacion/AuthContext";
-import AsistenciaService from "../services/AsistenciaService";
+import AsistenciaService from "../servicios/asistencia.service";
 import { Plus, Trash2, Calendar, Search, X } from "lucide-react";
-import TareasService from "../services/TareasService";
-import UsuariosService from "../services/UsuariosService";
+import TareasService from "../servicios/tareas.service";
+import UsuariosService from "../servicios/usuarios.service";
 
 const Asistencia = () => {
   const { user, isDocente, isAdmin, isEstudiante } = useAuth();
