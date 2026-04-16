@@ -19,18 +19,6 @@ const Materias = () => {
     docente_id: "",
     estudiantes: [] // Lista de emails seleccionados
   });
-
-  useEffect(() => {
-    if (!user) return;
-    fetchMaterias();
-    if (isAdmin) {
-      fetchDocentes();
-    }
-    if (isDocente()) {
-      fetchEstudiantes(); // Para gestionar mi lista
-    }
-  }, [user, isAdmin, isDocente]);
-
   const fetchMaterias = () => {
     const filter = isDocente() ? { docente_id: user.email } : {};
     TareasService.getAllMaterias(filter)
@@ -51,6 +39,18 @@ const Materias = () => {
       setEstudiantes(res.data.filter(u => u.rol === 'estudiante'));
     });
   };
+
+  useEffect(() => {
+    if (!user) return;
+    fetchMaterias();
+    if (isAdmin) {
+      fetchDocentes();
+    }
+    if (isDocente()) {
+      fetchEstudiantes(); // Para gestionar mi lista
+    }
+  }, [user, isAdmin, isDocente, fetchMaterias]);
+
 
   const handleOpenCreate = () => {
     setEditingMateria(null);
@@ -122,7 +122,7 @@ const Materias = () => {
         </div>
       )}
 
-      
+
       {isModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white p-6 rounded-lg w-full max-w-2xl max-h-[90vh] overflow-y-auto">
@@ -130,29 +130,29 @@ const Materias = () => {
               <h3 className="text-xl font-bold">{editingMateria ? "Editar Materia" : "Crear Materia"}</h3>
               <button onClick={() => setIsModalOpen(false)}><X /></button>
             </div>
-            
+
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
                 <label className="block text-gray font-medium text-black mb-1">Nombre de la Materia *</label>
-                <input 
-                  type="text" 
-                  name="nombre" 
+                <input
+                  type="text"
+                  name="nombre"
                   value={formData.nombre}
-                  onChange={e => setFormData({...formData, nombre: e.target.value})}
-                  className="w-full border rounded p-2" 
-                  required 
+                  onChange={e => setFormData({ ...formData, nombre: e.target.value })}
+                  className="w-full border rounded p-2"
+                  required
                 />
               </div>
 
-              
+
               {isAdmin && (
                 <div>
                   <label className="block text-gray font-medium  text-black mb-1">Docente Asignado *</label>
-                  <select 
-                    name="docente_id" 
+                  <select
+                    name="docente_id"
                     value={formData.docente_id}
-                    onChange={e => setFormData({...formData, docente_id: e.target.value})}
-                    className="w-full border rounded p-2" 
+                    onChange={e => setFormData({ ...formData, docente_id: e.target.value })}
+                    className="w-full border rounded p-2"
                     required
                   >
                     <option value="">-- Seleccionar Docente --</option>
@@ -167,14 +167,14 @@ const Materias = () => {
               <div>
                 <label className="block text-sm font-medium text-black mb-1">Estudiantes Inscritos</label>
                 <div className="border rounded p-2 h-40 overflow-y-auto text-black bg-gray-50">
-                  {estudiantes.length === 0 ? <p className="text-sm text-gray-400">No hay estudiantes cargados.</p> : 
+                  {estudiantes.length === 0 ? <p className="text-sm text-gray-400">No hay estudiantes cargados.</p> :
                     estudiantes.map(est => (
                       <label key={est.id} className="flex items-center p-1 hover:bg-gray-200 rounded cursor-pointer">
-                        <input 
-                          type="checkbox" 
+                        <input
+                          type="checkbox"
                           checked={formData.estudiantes.includes(est.email)}
                           onChange={() => toggleStudent(est.email)}
-                          className="mr-2" 
+                          className="mr-2"
                         />
                         <span className="text-sm ">{est.nombre_completo}</span>
                       </label>

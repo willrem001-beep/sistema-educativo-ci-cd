@@ -26,20 +26,6 @@ const Notas = () => {
   });
 
   const [filtroEstudiantes, setFiltroEstudiantes] = useState("");
-
-  // CARGAR DATOS
-  useEffect(() => {
-    if (!user?.email) return;
-    
-    fetchNotas();
-
-    // Llamamos a las funciones con () para obtener el booleano
-    if (isDocente() || isAdmin()) {
-      fetchEstudiantes();
-      fetchMaterias();
-    }
-  }, [user, isDocente, isAdmin]);
-
   const fetchNotas = () => {
     setLoading(true);
     const filterId = isEstudiante() ? user.email : ""; 
@@ -70,6 +56,20 @@ const Notas = () => {
       setMaterias(res.data || []);
     });
   };
+  // CARGAR DATOS
+  useEffect(() => {
+    if (!user?.email) return;
+    
+    fetchNotas();
+
+    // Llamamos a las funciones con () para obtener el booleano
+    if (isDocente() || isAdmin()) {
+      fetchEstudiantes();
+      fetchMaterias();
+    }
+  }, [user, isDocente, isAdmin]);
+
+
   const handleOpenCreate = () => {
     setEditingNota(null);
     setFormData({

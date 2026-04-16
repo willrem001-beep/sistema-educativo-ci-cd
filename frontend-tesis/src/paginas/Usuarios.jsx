@@ -5,7 +5,6 @@ import { useAuth } from "../autenticacion/AuthContext"
 import { CheckCircle, XCircle, Trash2, Edit, Save, X, UserPlus } from "lucide-react";
 
 const Usuarios = () => {
-  const { user, isAdmin } = useAuth();
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -43,8 +42,11 @@ const Usuarios = () => {
   };
 
   useEffect(() => {
-    fetchUsers();
-  }, []);
+  const loadUsers = async () => {
+    await fetchUsers();
+  };
+  loadUsers();
+}, []);
 
   //Logica para crear usuarios
   const handleCreateUserChange = (e) => {

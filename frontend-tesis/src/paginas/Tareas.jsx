@@ -34,25 +34,7 @@ const Tareas = () => {
   const [selectedFileName, setSelectedFileName] = useState("");
   const [materias, setMaterias] = useState([]);
 
-  //CARGAR DATOS 
-  useEffect(() => {
-    if (!user?.email) return;
-
-    fetchTareas();
-
-    if (isDocente() || isAdmin()) {
-      fetchEstudiantes();
-    }
-
-    if (isDocente() || isAdmin()) {
-      TareasService.getAllMaterias().then(res => {
-        setMaterias(res.data || []);
-      });
-    }
-  }, [user?.email]);
-
-
-  const fetchTareas = () => {
+    const fetchTareas = () => {
     setLoading(true);
     setError("");
 
@@ -81,6 +63,23 @@ const Tareas = () => {
         setLoadingEstudiantes(false);
       });
   };
+
+  //CARGAR DATOS 
+  useEffect(() => {
+    if (!user?.email) return;
+
+    fetchTareas();
+
+    if (isDocente() || isAdmin()) {
+      fetchEstudiantes();
+    }
+
+    if (isDocente() || isAdmin()) {
+      TareasService.getAllMaterias().then(res => {
+        setMaterias(res.data || []);
+      });
+    }
+  }, [user?.email]);
 
   // MANEJO DE ESTUDIANTES 
   const handleStudentToggle = (email) => {

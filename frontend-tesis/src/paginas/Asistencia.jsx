@@ -5,35 +5,6 @@ import UsuariosService from "../servicios/usuarios.service";
 import { useAuth } from "../autenticacion/AuthContext";
 import { Plus, Calendar, X, Search, Trash2 } from "lucide-react";
 
-const Asistencia = () => {
-  const { user, isDocente, isEstudiante, isAdmin } = useAuth();
-  const [logs, setLogs] = useState([]);
-  const [materias, setMaterias] = useState([]);
-  const [estudiantes, setEstudiantes] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-
-  // Modal
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [formData, setFormData] = useState({
-    materia: "",
-    usuario_id: "",
-    estado: "presente"
-  });
-  const [filtroEstudiantes, setFiltroEstudiantes] = useState("");
-
-  // Cargar datos iniciales
-  useEffect(() => {
-    if (!user?.email) return;
-
-    fetchLogs();
-    
-    if (isDocente() || isAdmin()) {
-      fetchMaterias();
-      fetchEstudiantes();
-    }
-  }, [user]);
-
   const fetchLogs = () => {
     setLoading(true);
     const filterId = isEstudiante() ? user.email : "";
@@ -68,6 +39,37 @@ const Asistencia = () => {
       })
       .catch(err => console.error("Error cargando estudiantes:", err));
   };
+
+const Asistencia = () => {
+  const { user, isDocente, isEstudiante, isAdmin } = useAuth();
+  const [logs, setLogs] = useState([]);
+  const [materias, setMaterias] = useState([]);
+  const [estudiantes, setEstudiantes] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  // Modal
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [formData, setFormData] = useState({
+    materia: "",
+    usuario_id: "",
+    estado: "presente"
+  });
+  const [filtroEstudiantes, setFiltroEstudiantes] = useState("");
+
+  // Cargar datos iniciales
+  useEffect(() => {
+    if (!user?.email) return;
+
+    fetchLogs();
+    
+    if (isDocente() || isAdmin()) {
+      fetchMaterias();
+      fetchEstudiantes();
+    }
+  }, [user, isAdmin, isDocente]);
+
+
 
   const handleOpenModal = () => {
     setFormData({ materia: "", usuario_id: "", estado: "presente" });
