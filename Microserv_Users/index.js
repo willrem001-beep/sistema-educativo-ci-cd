@@ -4,19 +4,25 @@ const cors = require('cors');
 const pool = require('./db');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-import client from 'prom-client'
 
-const collectDefaultMetrics = client.collectDefaultMetrics
-collectDefaultMetrics()
-
-app.get('/metrics', async (req, res) => {
-  res.set('Content-Type', client.register.contentType)
-  res.end(await client.register.metrics())
-})
 
 const app = express();
 const PORT = process.env.PORT || 3001;
 
+const client = require('prom-client');
+
+// recolecta métricas por defecto (CPU, memoria, etc.)
+client.collectDefaultMetrics();
+
+// endpoint /metrics
+app.get('/metrics', async (req, res) => {
+  try {
+    res.set('Content-Type', client.register.contentType);
+    res.end(await client.register.metrics());
+  } catch (err) {
+    res.status(500).end(err.message);
+  }
+});
 // Middlewares
 app.use(cors());
 app.use(express.json());
@@ -225,20 +231,6 @@ app.delete('/usuarios/:id', async (req, res) => {
   }
 });
 
-// Iniciar servidor
-app.get('/metrics', async (req, res) => {
-  try {
-    res.set('Content-Type', promClient.register.contentType);
-    res.end(await promClient.register.metrics());
-  } catch (err) {
-    res.status(500).end(err.message);
-  }
-});
-
-// Health check
-app.get('/health', (req, res) => {
-  res.json({ status: 'ok', timestamp: new Date().toISOString() });
-});
 
 app.listen(PORT, () => {
   console.log(`Microservicio de Usuarios mejorado corriendo en puerto ${3001}`);
