@@ -4,17 +4,16 @@ const cors = require('cors');
 const pool = require('./db');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-
+const client = require('prom-client');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
 
-const client = require('prom-client');
-
-// recolecta métricas por defecto (CPU, memoria, etc.)
+// Middlewares
+app.use(cors());
+app.use(express.json());
 client.collectDefaultMetrics();
 
-// endpoint /metrics
 app.get('/metrics', async (req, res) => {
   try {
     res.set('Content-Type', client.register.contentType);
@@ -23,10 +22,6 @@ app.get('/metrics', async (req, res) => {
     res.status(500).end(err.message);
   }
 });
-// Middlewares
-app.use(cors());
-app.use(express.json());
-
 // -----------------------------------------------------
 // RUTA 1: REGISTRO 
 // -----------------------------------------------------
