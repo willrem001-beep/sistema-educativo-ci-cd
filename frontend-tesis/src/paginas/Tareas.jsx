@@ -66,20 +66,18 @@ const Tareas = () => {
 
   //CARGAR DATOS 
   useEffect(() => {
+  const loadData = async () => {
     if (!user?.email) return;
 
-    fetchTareas();
+    await fetchTareas();
 
     if (isDocente() || isAdmin()) {
-      fetchEstudiantes();
+      await fetchEstudiantes();
     }
+  };
 
-    if (isDocente() || isAdmin()) {
-      TareasService.getAllMaterias().then(res => {
-        setMaterias(res.data || []);
-      });
-    }
-  }, [user?.email]);
+  loadData();
+}, [user]);
 
   // MANEJO DE ESTUDIANTES 
   const handleStudentToggle = (email) => {
