@@ -10,7 +10,7 @@ const Dashboard = () => {
     <div className="space-y-6">
       <div className="bg-blue-600 text-white p-6 rounded-lg shadow-md">
         <h1 className="text-3xl font-bold">¡Bienvenido, {user?.nombre}!</h1>
-        <p className="mt-2 opacity-90">Sistema de Gestión Académica con enfoque en Microservicios Pipeline 3.0</p>
+        <p className="mt-2 opacity-90">Sistema de Gestión Académica con enfoque en Microservicios Pipeline 4.0</p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
