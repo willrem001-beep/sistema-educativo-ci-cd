@@ -1,73 +1,75 @@
-import React, { useState, useEffect, useCallback } from "react";
-import AsistenciaService from "../servicios/asistencia.service";
-import TareasService from "../servicios/tareas.service";
-import UsuariosService from "../servicios/usuarios.service";
+import React, { useEffect, useState } from "react";
 import { useAuth } from "../autenticacion/AuthContext";
-import { Plus, Calendar, X, Search, Trash2 } from "lucide-react";
-
-const fetchLogs = () => {
-  setLoading(true);
-  const filterId = isEstudiante() ? user.email : "";
-
-  AsistenciaService.getAll(filterId)
-    .then(res => {
-      setLogs(res.data || []);
-      setError("");
-    })
-    .catch(err => {
-      console.error("Error cargando logs:", err);
-      setError("No se pudieron cargar los registros de asistencia");
-    })
-    .finally(() => setLoading(false));
-};
-
-const fetchMaterias = () => {
-  const filter = isDocente() ? { docente_id: user.email } : {};
-
-  TareasService.getAllMaterias(filter)
-    .then(res => {
-      setMaterias(res.data || []);
-    })
-    .catch(err => console.error("Error cargando materias:", err));
-};
-
-const fetchEstudiantes = () => {
-  UsuariosService.getAll()
-    .then(res => {
-      const soloEstudiantes = res.data.filter(u => u.rol === 'estudiante');
-      setEstudiantes(soloEstudiantes);
-    })
-    .catch(err => console.error("Error cargando estudiantes:", err));
-};
+import AsistenciaService from "../services/AsistenciaService";
+import { Plus, Trash2, Calendar, Search, X } from "lucide-react";
 
 const Asistencia = () => {
-  const { user, isDocente, isEstudiante, isAdmin } = useAuth();
+  const { user, isDocente, isAdmin, isEstudiante } = useAuth();
+
   const [logs, setLogs] = useState([]);
   const [materias, setMaterias] = useState([]);
   const [estudiantes, setEstudiantes] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-
-  // Modal
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [formData, setFormData] = useState({
     materia: "",
     usuario_id: "",
     estado: "presente"
   });
+
+  const fetchLogs = () => {
+    setLoading(true);
+    const filterId = isEstudiante() ? user.email : "";
+
+    AsistenciaService.getAll(filterId)
+      .then(res => {
+        setLogs(res.data || []);
+        setError("");
+      })
+      .catch(err => {
+        console.error("Error cargando logs:", err);
+        setError("No se pudieron cargar los registros de asistencia");
+      })
+      .finally(() => setLoading(false));
+  };
+
+  const fetchMaterias = () => {
+    const filter = isDocente() ? { docente_id: user.email } : {};
+
+    TareasService.getAllMaterias(filter)
+      .then(res => {
+        setMaterias(res.data || []);
+      })
+      .catch(err => console.error("Error cargando materias:", err));
+  };
+
+  const fetchEstudiantes = () => {
+    UsuariosService.getAll()
+      .then(res => {
+        const soloEstudiantes = res.data.filter(u => u.rol === 'estudiante');
+        setEstudiantes(soloEstudiantes);
+      })
+      .catch(err => console.error("Error cargando estudiantes:", err));
+  };
+
   const [filtroEstudiantes, setFiltroEstudiantes] = useState("");
 
   // Cargar datos iniciales
   useEffect(() => {
-    if (!user?.email) return;
-
-    fetchLogs();
+  const loadData = async () => {
+    await fetchLogs();
 
     if (isDocente() || isAdmin()) {
-      fetchMaterias();
-      fetchEstudiantes();
+      await fetchMaterias();
+      await fetchEstudiantes();
     }
-  }, [user, isAdmin, isDocente]);
+  };
+
+  if (user?.email) {
+    loadData();
+  }
+}, [user]);
 
 
 

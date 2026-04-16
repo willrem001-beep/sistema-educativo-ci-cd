@@ -1,7 +1,7 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import { BrowserRouter } from 'react-router-dom'
 import Login from './Login'
-import { AuthProvider } from '../autenticacion/AuthContext' 
+import { AuthProvider } from '../autenticacion/AuthContext'
 
 const renderWithRouter = (ui, { route = '/' } = {}) => {
   window.history.pushState({}, 'Test page', route)

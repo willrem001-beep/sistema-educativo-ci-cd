@@ -73,6 +73,11 @@ const Login = () => {
           >
             {loading ? "Cargando..." : "Ingresar"}
           </button>
+          {message && (
+            <p className="text-red-500 text-sm mt-2 text-center">
+              {message}
+            </p>
+          )}
         </form>
       </div>
     </div>
