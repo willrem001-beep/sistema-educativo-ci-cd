@@ -1,0 +1,67 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: ms-usuarios
+  namespace: default
+spec:
+  selector:
+    app: ms-usuarios
+  ports:
+  - name: http
+    port: 3001
+    targetPort: 3001
+  - name: metrics
+    port: 9090
+    targetPort: 9090
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ms-tareas
+  namespace: default
+spec:
+  selector:
+    app: ms-tareas
+  ports:
+  - name: http
+    port: 3002
+    targetPort: 3002
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ms-notas
+  namespace: default
+spec:
+  selector:
+    app: ms-notas
+  ports:
+  - name: http
+    port: 3003
+    targetPort: 3003
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ms-asistencia
+  namespace: default
+spec:
+  selector:
+    app: ms-asistencia
+  ports:
+  - name: http
+    port: 3004
+    targetPort: 3004
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ms-frontend
+  namespace: default
+spec:
+  selector:
+    app: ms-frontend
+  ports:
+  - name: http
+    port: 80
+    targetPort: 80

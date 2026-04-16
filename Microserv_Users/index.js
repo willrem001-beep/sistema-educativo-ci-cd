@@ -217,6 +217,20 @@ app.delete('/usuarios/:id', async (req, res) => {
 });
 
 // Iniciar servidor
+app.get('/metrics', async (req, res) => {
+  try {
+    res.set('Content-Type', promClient.register.contentType);
+    res.end(await promClient.register.metrics());
+  } catch (err) {
+    res.status(500).end(err.message);
+  }
+});
+
+// Health check
+app.get('/health', (req, res) => {
+  res.json({ status: 'ok', timestamp: new Date().toISOString() });
+});
+
 app.listen(PORT, () => {
   console.log(`Microservicio de Usuarios mejorado corriendo en puerto ${3001}`);
 });
