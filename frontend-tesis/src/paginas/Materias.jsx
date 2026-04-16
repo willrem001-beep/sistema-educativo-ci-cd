@@ -6,7 +6,7 @@ import { Plus, Save, X, Users, GraduationCap, Search } from "lucide-react";
 
 const Materias = () => {
   const { user, isAdmin, isDocente } = useAuth();
-  //const [materias, setMaterias] = useState([]);
+  const [materias, setMaterias] = useState([]);
   const [estudiantes, setEstudiantes] = useState([]);
   const [docentes, setDocentes] = useState([]);
   const [loading, setLoading] = useState(true);

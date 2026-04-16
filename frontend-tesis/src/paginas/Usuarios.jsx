@@ -5,6 +5,7 @@ import { useAuth } from "../autenticacion/AuthContext"
 import { CheckCircle, XCircle, Trash2, Edit, Save, X, UserPlus } from "lucide-react";
 
 const Usuarios = () => {
+  const { isAdmin } = useAuth();
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");

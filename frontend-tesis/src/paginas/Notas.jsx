@@ -56,18 +56,20 @@ const Notas = () => {
       setMaterias(res.data || []);
     });
   };
-  // CARGAR DATOS
-  useEffect(() => {
+useEffect(() => {
+  const loadData = async () => {
     if (!user?.email) return;
-    
-    fetchNotas();
 
-    // Llamamos a las funciones con () para obtener el booleano
+    await fetchNotas();
+
     if (isDocente() || isAdmin()) {
-      fetchEstudiantes();
-      fetchMaterias();
+      await fetchEstudiantes();
+      await fetchMaterias();
     }
-  }, [user, isDocente, isAdmin]);
+  };
+
+  loadData();
+}, [user]);
 
 
   const handleOpenCreate = () => {
