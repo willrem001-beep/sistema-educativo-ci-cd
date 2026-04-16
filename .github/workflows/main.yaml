@@ -169,14 +169,8 @@ jobs:
       - name: Update deployment image
         shell: powershell
         run: |
-          Write-Host "Updating deployment ${{ matrix.service }}..."
-          if ("${{ matrix.service }}" -eq "ms-frontend") {
-            kubectl set image deployment/${{ matrix.service }} `
-              ${{ matrix.service }}=ms-frontend:latest
-          } else {
-            kubectl set image deployment/${{ matrix.service }} `
-              ${{ matrix.service }}=${{ env.REGISTRY }}/${{ github.repository }}/${{ matrix.service }}:${{ env.IMAGE_TAG }}
-          }
+          kubectl set image deployment/ms-frontend `
+          ms-frontend=ghcr.io/${{ github.repository }}/ms-frontend:${{ github.sha }}
 
       - name: Verify rollout
         shell: powershell
