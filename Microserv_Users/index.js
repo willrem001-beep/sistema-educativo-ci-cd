@@ -4,30 +4,19 @@ const cors = require('cors');
 const pool = require('./db');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const promClient = require('prom-client');
+import client from 'prom-client'
 
+const collectDefaultMetrics = client.collectDefaultMetrics
+collectDefaultMetrics()
+
+app.get('/metrics', async (req, res) => {
+  res.set('Content-Type', client.register.contentType)
+  res.end(await client.register.metrics())
+})
 
 const app = express();
 const PORT = process.env.PORT || 3001;
-promClient.collectDefaultMetrics();
 
-app.get('/metrics', (req, res) => {
-  res.set('Content-Type', promClient.register.contentType);
-  promClient.register.metrics().then(metrics => {
-    res.end(metrics);
-  }).catch(err => {
-    res.status(500).end(err.message);
-  });
-});
-
-app.get('/health', (req, res) => {
-  res.json({ status: 'ok', service: 'metrics-exporter' });
-});
-
-const PORT = 9090;
-app.listen(PORT, '0.0.0.0', () => {
-  console.log(`Metrics server running on port ${PORT}`);
-});
 // Middlewares
 app.use(cors());
 app.use(express.json());
