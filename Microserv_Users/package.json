@@ -6,7 +6,7 @@
   "scripts": {
     "start": "node index.js",
     "dev": "nodemon index.js",
-    "test": "echo \"✅ Test básico para ms-usuarios - OK\" && exit 0"
+    "test": "jest"
   },
   "keywords": [],
   "author": "",
