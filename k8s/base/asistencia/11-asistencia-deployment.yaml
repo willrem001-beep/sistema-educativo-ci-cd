@@ -11,6 +11,10 @@ spec:
     metadata:
       labels:
         app: ms-asistencia
+      annotations:
+        prometheus.io/scrape: "true"    
+        prometheus.io/port: "3004"      
+        prometheus.io/path: "/metrics"
     spec:
       containers:
       - name: ms-asistencia

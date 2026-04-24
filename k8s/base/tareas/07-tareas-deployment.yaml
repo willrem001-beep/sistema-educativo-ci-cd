@@ -11,6 +11,10 @@ spec:
     metadata:
       labels:
         app: ms-tareas
+      annotations:
+        prometheus.io/scrape: "true"    
+        prometheus.io/port: "3002"      
+        prometheus.io/path: "/metrics"
     spec:
       containers:
       - name: ms-tareas
