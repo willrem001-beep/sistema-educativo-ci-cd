@@ -1,11 +1,40 @@
-en este archivo creamos usuario y asignamos su rol 
-DO
-$$
-BEGIN
-  IF NOT EXISTS (
-    SELECT FROM pg_roles WHERE rolname = 'usuario creado en BD'
-  ) THEN
-    CREATE ROLE rol_usuario LOGIN PASSWORD 'contraseña';
-  END IF;
+en este archivo creamos usuario y asignamos su rol
+ $$ BEGIN
+   IF NOT EXISTS (
+      SELECT FROM pg_roles WHERE rolname = 'user_usuarios'
+   ) THEN
+      CREATE ROLE user_usuarios LOGIN PASSWORD 'password_usuarios';
+   END IF;
 END
-$$;
+ $$;
+DO
+ $$ BEGIN
+   IF NOT EXISTS (
+      SELECT FROM pg_roles WHERE rolname = 'user_notas'
+   ) THEN
+      CREATE ROLE user_notas LOGIN PASSWORD 'password_notas';
+   END IF;
+END
+ $$;
+DO
+ $$ BEGIN
+   IF NOT EXISTS (
+      SELECT FROM pg_database WHERE datname = 'db_usuarios'
+   ) THEN
+      CREATE DATABASE db_usuarios OWNER user_usuarios;
+   END IF;
+END
+ $$;
+
+DO
+ $$ BEGIN
+   IF NOT EXISTS (
+      SELECT FROM pg_database WHERE datname = 'db_notas'
+   ) THEN
+      CREATE DATABASE db_notas OWNER user_notas;
+   END IF;
+END
+ $$;
+-- Asignar privilegios
+GRANT ALL PRIVILEGES ON DATABASE db_usuarios TO user_usuarios;
+GRANT ALL PRIVILEGES ON DATABASE db_notas TO user_notas;
