@@ -18,7 +18,7 @@ spec:
     spec:
       containers:
       - name: ms-tareas
-        image: ghcr.io/willrem001-beep/sistema-educativo-ci-cd/ms-tareas:${IMAGE_TAG}
+        image: ghcr.io/willrem001-beep/sistema-educativo-ci-cd/ms-tareas:latest
         imagePullPolicy: Always
         ports:
         - containerPort: 3002

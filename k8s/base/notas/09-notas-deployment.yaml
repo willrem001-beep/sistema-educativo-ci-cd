@@ -18,7 +18,7 @@ spec:
     spec:
       containers:
       - name: ms-notas
-        image: ghcr.io/willrem001-beep/sistema-educativo-ci-cd/ms-notas:${IMAGE_TAG}
+        image: ghcr.io/willrem001-beep/sistema-educativo-ci-cd/ms-notas:latest
         imagePullPolicy: Always
         ports:
         - containerPort: 3003

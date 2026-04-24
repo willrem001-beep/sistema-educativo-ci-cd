@@ -18,7 +18,7 @@ spec:
     spec:
       containers:
       - name: ms-usuarios
-        image: ghcr.io/willrem001-beep/sistema-educativo-ci-cd/ms-usuarios:${IMAGE_TAG}
+        image: ghcr.io/willrem001-beep/sistema-educativo-ci-cd/ms-usuarios:latest
         imagePullPolicy: Always 
         ports:
         - containerPort: 3001
