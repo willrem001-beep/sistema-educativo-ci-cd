@@ -94,6 +94,7 @@ jobs:
         with:
           images: ${{ env.REGISTRY }}/${{ github.repository }}/${{ matrix.service }}
           tags: |
+            type=raw,value=${{ env.IMAGE_TAG }},priority=1000
             type=raw,value=latest,enable={{is_default_branch}}
             type=sha,format=short
             type=ref,event=branch
@@ -107,8 +108,8 @@ jobs:
           context: ${{ matrix.path }}
           push: ${{ github.event_name != 'pull_request' }}
           tags: |
-            ${{ env.REGISTRY }}/${{ github.repository }}/${{ matrix.service }}:latest
             ${{ env.REGISTRY }}/${{ github.repository }}/${{ matrix.service }}:${{ env.IMAGE_TAG }}
+            ${{ env.REGISTRY }}/${{ github.repository }}/${{ matrix.service }}:latest
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
@@ -148,16 +149,48 @@ jobs:
           minikube version
           kubectl version --client
 
-      - name: Load latest image to Minikube (frontend only)
-        if: matrix.service == 'ms-frontend'
-        working-directory: ./frontend-tesis
+      - name: Pull and load image to Minikube for all services
         shell: powershell
         run: |
-          Write-Host "Building frontend Docker image..."
-          docker build --no-cache -t ms-frontend:latest .
-          Write-Host "Loading image to Minikube..."
-          minikube image load ms-frontend:latest
-          Write-Host "Image loaded successfully"
+          Write-Host "Processing ${{ matrix.service }}..."
+          
+          # Configurar la imagen completa
+          $IMAGE_URL = "${{ env.REGISTRY }}/${{ github.repository }}/${{ matrix.service }}:${{ env.IMAGE_TAG }}"
+          
+          Write-Host "Image URL: $IMAGE_URL"
+          
+          # Para el frontend, construir localmente (como antes)
+          if ("${{ matrix.service }}" -eq "ms-frontend") {
+            Write-Host "Building frontend Docker image locally..."
+            Set-Location ./frontend-tesis
+            docker build --no-cache -t ms-frontend:latest .
+            Write-Host "Loading frontend image to Minikube..."
+            minikube image load ms-frontend:latest
+            Set-Location ..
+          } 
+          else {
+            # Para los microservicios backend, descargar desde GHCR y cargar a Minikube
+            Write-Host "Pulling ${{ matrix.service }} image from GHCR..."
+            
+            # Hacer login a GHCR (si es necesario)
+            echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+            
+            # Descargar la imagen específica con el tag del commit
+            docker pull $IMAGE_URL
+            
+            # También descargar y etiquetar como latest para compatibilidad
+            docker tag $IMAGE_URL ${{ matrix.service }}:latest
+            
+            # Cargar a Minikube
+            Write-Host "Loading ${{ matrix.service }} image to Minikube..."
+            minikube image load $IMAGE_URL
+            minikube image load ${{ matrix.service }}:latest
+            
+            Write-Host "Image loaded successfully for ${{ matrix.service }}"
+          }
+          
+          Write-Host "Cleaning up old images..."
+          docker image prune -f
 
       - name: Verify Minikube is running
         shell: powershell
@@ -166,11 +199,19 @@ jobs:
           minikube status
           kubectl get nodes
 
-      - name: Update deployment image
+      - name: Update deployment image with specific tag
         shell: powershell
         run: |
-          kubectl set image deployment/ms-frontend `
-          ms-frontend=ghcr.io/${{ github.repository }}/ms-frontend:${{ github.sha }}
+          if ("${{ matrix.service }}" -eq "ms-frontend") {
+            # Para frontend, usar la imagen local
+            kubectl set image deployment/${{ matrix.service }} `
+            ${{ matrix.service }}=${{ matrix.service }}:latest
+          } else {
+            # Para backend, usar la imagen específica de GHCR
+            $IMAGE_URL = "${{ env.REGISTRY }}/${{ github.repository }}/${{ matrix.service }}:${{ env.IMAGE_TAG }}"
+            kubectl set image deployment/${{ matrix.service }} `
+            ${{ matrix.service }}=$IMAGE_URL
+          }
 
       - name: Verify rollout
         shell: powershell
@@ -184,6 +225,16 @@ jobs:
         run: |
           Write-Host "Pod status for ${{ matrix.service }}:"
           kubectl get pods -l app=${{ matrix.service }}
+          
+          # Verificar que la imagen correcta está corriendo
+          Write-Host "Verifying image in running pods..."
+          $PODS = kubectl get pods -l app=${{ matrix.service }} -o jsonpath='{.items[*].metadata.name}'
+          foreach ($POD in $PODS) {
+            Write-Host "Pod: $POD"
+            kubectl get pod $POD -o jsonpath='{.spec.containers[0].image}'
+            Write-Host ""
+          }
+          
           kubectl get svc ${{ matrix.service }}-service 2>$null
 
       - name: Deployment summary
@@ -191,7 +242,12 @@ jobs:
         run: |
           Write-Host "========================================"
           Write-Host "${{ matrix.service }} deployed successfully"
-          Write-Host "Image: ${{ env.REGISTRY }}/${{ github.repository }}/${{ matrix.service }}:${{ env.IMAGE_TAG }}"
+          if ("${{ matrix.service }}" -eq "ms-frontend") {
+            Write-Host "Image: Built locally and loaded to Minikube"
+          } else {
+            Write-Host "Image: ${{ env.REGISTRY }}/${{ github.repository }}/${{ matrix.service }}:${{ env.IMAGE_TAG }}"
+          }
+          Write-Host "Commit: ${{ github.sha }}"
           Write-Host "========================================"
 
   # ============================================
@@ -213,6 +269,14 @@ jobs:
           echo "Commit: ${{ github.sha }}"
           echo "Image tag: ${{ env.IMAGE_TAG }}"
           echo "Target environment: Minikube"
+          echo "========================================"
+          echo ""
+          echo "Deployed images:"
+          echo "- ms-usuarios: ${{ env.REGISTRY }}/${{ github.repository }}/ms-usuarios:${{ env.IMAGE_TAG }}"
+          echo "- ms-tareas: ${{ env.REGISTRY }}/${{ github.repository }}/ms-tareas:${{ env.IMAGE_TAG }}"
+          echo "- ms-notas: ${{ env.REGISTRY }}/${{ github.repository }}/ms-notas:${{ env.IMAGE_TAG }}"
+          echo "- ms-asistencia: ${{ env.REGISTRY }}/${{ github.repository }}/ms-asistencia:${{ env.IMAGE_TAG }}"
+          echo "- ms-frontend: Built locally"
           echo "========================================"
 
   # ============================================
