@@ -3,12 +3,24 @@ const express = require('express');
 const cors = require('cors');
 const mongoose = require('mongoose');
 require('dotenv').config();
+const client = require('prom-client');
+
 
 const app = express();
 const PORT = process.env.PORT || 3004;
 
 app.use(cors());
 app.use(express.json());
+client.collectDefaultMetrics();
+
+app.get('/metrics', async (req, res) => {
+  try {
+    res.set('Content-Type', client.register.contentType);
+    res.end(await client.register.metrics());
+  } catch (err) {
+    res.status(500).end(err.message);
+  }
+});
 
 // --- Esquema de Asistencia ---
 const asistenciaSchema = new mongoose.Schema({

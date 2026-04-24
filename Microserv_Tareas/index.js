@@ -3,12 +3,15 @@ const cors = require('cors');
 const mongoose = require('mongoose');
 const multer = require('multer');
 const path = require('path');
+const client = require('prom-client');
+
 
 const fs = require('fs');
 require('dotenv').config();
 
 const app = express();
 const PORT = process.env.PORT || 3002;
+
 
 // --- CONFIGURACIÓN DE MULTTER (SUBIDA DE ARCHIVOS) ---
 const storage = multer.diskStorage({
@@ -30,6 +33,16 @@ const upload = multer({ storage: storage });
 app.use(cors());
 app.use(express.json());
 app.use('/uploads', express.static('uploads'));
+client.collectDefaultMetrics();
+
+app.get('/metrics', async (req, res) => {
+  try {
+    res.set('Content-Type', client.register.contentType);
+    res.end(await client.register.metrics());
+  } catch (err) {
+    res.status(500).end(err.message);
+  }
+});
 
 // NOTA: No necesitamos express.urlencoded() aquí porque multer maneja el form-data
 

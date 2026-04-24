@@ -3,12 +3,24 @@ const express = require('express');
 const cors = require('cors');
 const pool = require('./db'); 
 require('dotenv').config();
+const client = require('prom-client');
+
 
 const app = express();
 const PORT = process.env.PORT || 3003;
 
 app.use(cors());
 app.use(express.json());
+client.collectDefaultMetrics();
+
+app.get('/metrics', async (req, res) => {
+  try {
+    res.set('Content-Type', client.register.contentType);
+    res.end(await client.register.metrics());
+  } catch (err) {
+    res.status(500).end(err.message);
+  }
+});
 
 // RUTA: Crear nota
 app.post('/notas', async (req, res) => {
