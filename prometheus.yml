@@ -12,32 +12,50 @@ scrape_configs:
 
   # Microservicio de Usuarios
   - job_name: 'ms-usuarios'
+    scrape_interval: 5s # Escaneo rápido para ver cambios
     metrics_path: '/metrics'
     static_configs:
-      - targets: ['ms-usuarios.default.svc.cluster.local:3001']
-    # Si aún no tienes endpoint /metrics, comenta temporalmente
-    # scrape_timeout: 5s
+      - targets: ['192.168.49.2:30001']
+        labels:
+          app: 'usuarios'
+          origen: 'minikube-nodeport'
 
   # Microservicio de Tareas
   - job_name: 'ms-tareas'
+    scrape_interval: 5s # Escaneo rápido para ver cambios
     metrics_path: '/metrics'
     static_configs:
-      - targets: ['ms-tareas.default.svc.cluster.local:3002']
+      - targets: ['192.168.49.2:30002']
+        labels:
+          app: 'tareas'
+          origen: 'minikube-nodeport'
 
   # Microservicio de Notas
   - job_name: 'ms-notas'
+    scrape_interval: 5s # Escaneo rápido para ver cambios
     metrics_path: '/metrics'
     static_configs:
-      - targets: ['ms-notas.default.svc.cluster.local:3003']
+      - targets: ['192.168.49.2:30003']
+        labels:
+          app: 'notas'
+          origen: 'minikube-nodeport'
 
   # Microservicio de Asistencia
   - job_name: 'ms-asistencia'
+    scrape_interval: 5s # Escaneo rápido para ver cambios
     metrics_path: '/metrics'
     static_configs:
-      - targets: ['ms-asistencia.default.svc.cluster.local:3004']
+      - targets: ['192.168.49.2:30004']
+        labels:
+          app: 'asistencia'
+          origen: 'minikube-nodeport'
 
   # Frontend
   - job_name: 'ms-frontend'
+    scrape_interval: 5s # Escaneo rápido para ver cambios
     metrics_path: '/metrics'
     static_configs:
-      - targets: ['ms-frontend.default.svc.cluster.local:80']
+      - targets: ['192.168.49.2:30080']
+        labels:
+          app: 'frontend'
+          origen: 'minikube-nodeport'
