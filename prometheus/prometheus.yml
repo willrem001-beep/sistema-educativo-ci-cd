@@ -15,7 +15,7 @@ scrape_configs:
   - job_name: 'ms-usuarios'
     metrics_path: /metrics
     static_configs:
-      - targets: ['host.docker.internal:50389']
+      - targets: ['host.docker.internal:55178']
         labels:
           app: 'usuarios'
 
@@ -23,7 +23,7 @@ scrape_configs:
   - job_name: 'ms-tareas'
     metrics_path: /metrics
     static_configs:
-      - targets: ['host.docker.internal:50397']
+      - targets: ['host.docker.internal:55185']
         labels:
           app: 'tareas'
 
@@ -31,7 +31,7 @@ scrape_configs:
   - job_name: 'ms-notas'
     metrics_path: /metrics
     static_configs:
-      - targets: ['host.docker.internal:50405']
+      - targets: ['host.docker.internal:55198']
         labels:
           app: 'notas'
 
@@ -39,14 +39,6 @@ scrape_configs:
   - job_name: 'ms-asistencia'
     metrics_path: /metrics
     static_configs:
-      - targets: ['host.docker.internal:65269']
+      - targets: ['host.docker.internal:64106']
         labels:
           app: 'asistencia'
-
-  # 6. Frontend (Puerto 30005 - Asumido basado en tu lista de svc)
-  #- job_name: 'ms-frontend'
-   # metrics_path: /metrics
-   # static_configs:
-    #  - targets: ['host.docker.internal:65467']
-     #   labels:
-      #    app: 'frontend'
