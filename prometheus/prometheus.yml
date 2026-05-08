@@ -42,3 +42,12 @@ scrape_configs:
       - targets: ['host.docker.internal:56138']
         labels:
           app: 'asistencia'
+   # CADVISOR
+  - job_name: 'cadvisor'
+    static_configs:
+      - targets: ['cadvisor:8080']
+
+  # NODE EXPORTER
+  - job_name: 'node-exporter'
+    static_configs:
+      - targets: ['node-exporter:9100']
