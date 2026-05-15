@@ -3,6 +3,7 @@ import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { BrowserRouter } from "react-router-dom";
 import Login from "./Login";
 import { useAuth } from "../autenticacion/AuthContext";
+import { vi } from 'vitest';
 
 // Mockeamos el hook useAuth
 vi.mock("../autenticacion/AuthContext", () => ({

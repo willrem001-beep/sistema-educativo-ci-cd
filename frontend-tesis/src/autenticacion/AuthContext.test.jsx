@@ -2,6 +2,7 @@ import React from "react";
 import { render, renderHook, screen, waitFor, act } from "@testing-library/react";
 import { AuthProvider, useAuth } from "./AuthContext";
 import AuthService from "../servicios/auth.service.js";
+import { vi } from 'vitest';
 
 // Mockeamos el servicio
 vi.mock("../servicios/auth.service.js");

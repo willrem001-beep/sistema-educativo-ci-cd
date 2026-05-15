@@ -1,5 +1,6 @@
 import axios from "axios";
 import AuthService from "./auth.service.js";
+import { vi } from 'vitest';
 
 // Mockeamos axios
 vi.mock("axios");
