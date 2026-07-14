@@ -15,7 +15,7 @@ scrape_configs:
   - job_name: 'ms-usuarios'
     metrics_path: /metrics
     static_configs:
-      - targets: ['host.docker.internal:65289']
+      - targets: ['host.docker.internal:57187']
         labels:
           app: 'usuarios'
 
@@ -23,7 +23,7 @@ scrape_configs:
   - job_name: 'ms-tareas'
     metrics_path: /metrics
     static_configs:
-      - targets: ['host.docker.internal:65297']
+      - targets: ['host.docker.internal:57196']
         labels:
           app: 'tareas'
 
@@ -31,7 +31,7 @@ scrape_configs:
   - job_name: 'ms-notas'
     metrics_path: /metrics
     static_configs:
-      - targets: ['host.docker.internal:65304']
+      - targets: ['host.docker.internal:57204']
         labels:
           app: 'notas'
 
@@ -39,7 +39,7 @@ scrape_configs:
   - job_name: 'ms-asistencia'
     metrics_path: /metrics
     static_configs:
-      - targets: ['host.docker.internal:65312']
+      - targets: ['host.docker.internal:57214']
         labels:
           app: 'asistencia'
 
