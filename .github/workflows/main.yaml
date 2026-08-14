@@ -228,9 +228,15 @@ jobs:
           Write-Host "Updating ${{ matrix.service }} to image: $fullImage"
           kubectl set image deployment/${{ matrix.service }} ${{ matrix.service }}=$fullImage
           
-          # Asegurar que siempre descargue la última versión
-          kubectl patch deployment ${{ matrix.service }} `
-            -p '{"spec":{"template":{"spec":{"containers":[{"name":"${{ matrix.service }}","imagePullPolicy":"Always"}]}}}}'
+          $policyJson = '{\"spec\":{\"template\":{\"spec\":{\"containers\":[{\"name\":\"${{ matrix.service }}\",\"imagePullPolicy\":\"Always\"}]}}}}'
+          kubectl patch deployment ${{ matrix.service }} -p $policyJson
+          
+          if ($LASTEXITCODE -eq 0) {
+            Write-Host " Image updated and pull policy set to Always for ${{ matrix.service }}"
+          } else {
+            Write-Host " Failed to update ${{ matrix.service }}"
+            exit 1
+          }
 
       - name: Verify rollout
         id: rollout
