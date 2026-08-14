@@ -8,11 +8,12 @@ on:
 
 env:
   REGISTRY: ghcr.io
+  DOCKER_REGISTRY: docker.io
   IMAGE_TAG: ${{ github.sha }}
 
 jobs:
   # ============================================
-  # JOB 1: Build, test and push microservices to GHCR
+  # JOB 1: Build, test and push microservices
   # ============================================
   build-and-push:
     runs-on: ubuntu-latest
@@ -27,18 +28,23 @@ jobs:
           - service: ms-usuarios
             path: ./Microserv_Users
             port: 3001
+            docker_user: r3mr1z4  # 👈 Agregar usuario Docker para cada servicio
           - service: ms-tareas
             path: ./Microserv_Tareas
             port: 3002
+            docker_user: r3mr1z4
           - service: ms-notas
             path: ./Microserv_Notas
             port: 3003
+            docker_user: r3mr1z4
           - service: ms-asistencia
             path: ./Microserv_Asistencias
             port: 3004
+            docker_user: r3mr1z4
           - service: ms-frontend
             path: ./frontend-tesis
             port: 80
+            docker_user: r3mr1z4
       fail-fast: true
 
     steps:
@@ -81,6 +87,14 @@ jobs:
         with:
           driver-opts: network=host
 
+      # NUEVO: Login a Docker Hub
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      # Login a GHCR (sigue siendo necesario para otros servicios)
       - name: Login to GitHub Container Registry
         uses: docker/login-action@v3
         with:
@@ -92,7 +106,9 @@ jobs:
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: ${{ env.REGISTRY }}/${{ github.repository }}/${{ matrix.service }}
+          images: |
+            ${{ env.REGISTRY }}/${{ github.repository }}/${{ matrix.service }}
+            ${{ env.DOCKER_REGISTRY }}/${{ matrix.docker_user }}/${{ matrix.service }}
           tags: |
             type=raw,value=latest,enable={{is_default_branch}}
             type=sha,format=short
@@ -101,7 +117,7 @@ jobs:
             org.opencontainers.image.title=${{ matrix.service }}
             org.opencontainers.image.revision=${{ github.sha }}
 
-      - name: Build and push Docker image
+      - name: Build and push Docker images
         uses: docker/build-push-action@v5
         with:
           context: ${{ matrix.path }}
@@ -109,6 +125,8 @@ jobs:
           tags: |
             ${{ env.REGISTRY }}/${{ github.repository }}/${{ matrix.service }}:latest
             ${{ env.REGISTRY }}/${{ github.repository }}/${{ matrix.service }}:${{ env.IMAGE_TAG }}
+            ${{ env.DOCKER_REGISTRY }}/${{ matrix.docker_user }}/${{ matrix.service }}:latest
+            ${{ env.DOCKER_REGISTRY }}/${{ matrix.docker_user }}/${{ matrix.service }}:${{ env.IMAGE_TAG }}
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
@@ -119,8 +137,9 @@ jobs:
       - name: Verify image push
         if: github.event_name != 'pull_request'
         run: |
-          echo "Image ${{ matrix.service }} built and pushed to GHCR"
-          echo "Registry: ${{ env.REGISTRY }}/${{ github.repository }}/${{ matrix.service }}:${{ env.IMAGE_TAG }}"
+          echo "Images for ${{ matrix.service }} pushed to:"
+          echo "  - GHCR: ${{ env.REGISTRY }}/${{ github.repository }}/${{ matrix.service }}:${{ env.IMAGE_TAG }}"
+          echo "  - Docker Hub: ${{ env.DOCKER_REGISTRY }}/${{ matrix.docker_user }}/${{ matrix.service }}:${{ env.IMAGE_TAG }}"
 
   # ============================================
   # JOB 2: Deploy ALL services to Minikube
@@ -148,38 +167,72 @@ jobs:
           minikube version
           kubectl version --client
 
-      - name: Load latest image to Minikube (frontend only)
-        if: matrix.service == 'ms-frontend'
-        working-directory: ./frontend-tesis
-        shell: powershell
-        run: |
-          Write-Host "Building frontend Docker image..."
-          docker build --no-cache -t ms-frontend:latest .
-          Write-Host "Loading image to Minikube..."
-          minikube image load ms-frontend:latest
-          Write-Host "Image loaded successfully"
-
       - name: Verify Minikube is running
         shell: powershell
         run: |
           Write-Host "Checking Minikube status..."
           minikube status
           kubectl get nodes
-  #actualizacion de imagen 2
+
+      # 👇 NUEVO: Crear secret para Docker Hub (y GHCR)
+      - name: Create image pull secrets
+        shell: powershell
+        run: |
+          # Secret para Docker Hub
+          kubectl create secret docker-registry dockerhub-secret `
+            --docker-server=docker.io `
+            --docker-username=${{ secrets.DOCKER_USERNAME }} `
+            --docker-password=${{ secrets.DOCKER_PASSWORD }} `
+            --dry-run=client -o yaml | kubectl apply -f -
+          
+          # Secret para GHCR
+          kubectl create secret docker-registry ghcr-secret `
+            --docker-server=ghcr.io `
+            --docker-username=${{ github.actor }} `
+            --docker-password=${{ secrets.GITHUB_TOKEN }} `
+            --dry-run=client -o yaml | kubectl apply -f -
+          
+          Write-Host "Image pull secrets created/updated"
+
+      # NUEVO: Parchear deployments con los secrets
+      - name: Patch deployment with imagePullSecrets
+        shell: powershell
+        run: |
+          Write-Host "Adding imagePullSecrets to ${{ matrix.service }}..."
+          kubectl patch deployment ${{ matrix.service }} `
+            -p '{"spec":{"template":{"spec":{"imagePullSecrets":[{"name":"dockerhub-secret"},{"name":"ghcr-secret"}]}}}}'
+          Write-Host "Deployment ${{ matrix.service }} patched"
+
+      #  MODIFICADO: Usar Docker Hub para TODOS los servicios
       - name: Update deployment image
         shell: powershell
         run: |
-          if ("${{ matrix.service }}" -eq "ms-frontend") {
-            kubectl set image deployment/${{ matrix.service }} ${{ matrix.service }}=ms-frontend:latest
-          } else {
-            kubectl set image deployment/${{ matrix.service }} ${{ matrix.service }}=ghcr.io/${{ github.repository }}/${{ matrix.service }}:${{ github.sha }}
-          }
+          $fullImage = "docker.io/r3mr1z4/${{ matrix.service }}:${{ github.sha }}"
+          Write-Host "Updating ${{ matrix.service }} to image: $fullImage"
+          kubectl set image deployment/${{ matrix.service }} ${{ matrix.service }}=$fullImage
+          
+          # Asegurar que siempre descargue la última versión
+          kubectl patch deployment ${{ matrix.service }} `
+            -p '{"spec":{"template":{"spec":{"containers":[{"name":"${{ matrix.service }}","imagePullPolicy":"Always"}]}}}}'
+
       - name: Verify rollout
+        id: rollout
         shell: powershell
         run: |
           Write-Host "Waiting for rollout of ${{ matrix.service }}..."
           kubectl rollout status deployment/${{ matrix.service }} --timeout=5m
           Write-Host "Rollout of ${{ matrix.service }} completed"
+
+      - name: Automatic Rollback on Failure
+        if: failure() && steps.rollout.outcome == 'failure'
+        shell: powershell
+        run: |
+          Write-Host "========================================"
+          Write-Host "⚠️ ROLLBACK: ${{ matrix.service }} failed to rollout!"
+          Write-Host "========================================"
+          kubectl rollout undo deployment/${{ matrix.service }}
+          kubectl rollout status deployment/${{ matrix.service }} --timeout=3m
+          Write-Host "Rollback completed"
 
       - name: Check pod status
         shell: powershell
@@ -193,7 +246,7 @@ jobs:
         run: |
           Write-Host "========================================"
           Write-Host "${{ matrix.service }} deployed successfully"
-          Write-Host "Image: ${{ env.REGISTRY }}/${{ github.repository }}/${{ matrix.service }}:${{ env.IMAGE_TAG }}"
+          Write-Host "Image: docker.io/r3mr1z4/${{ matrix.service }}:${{ github.sha }}"
           Write-Host "========================================"
 
   # ============================================
@@ -215,6 +268,7 @@ jobs:
           echo "Commit: ${{ github.sha }}"
           echo "Image tag: ${{ env.IMAGE_TAG }}"
           echo "Target environment: Minikube"
+          echo "All images pushed to Docker Hub and GHCR"
           echo "========================================"
 
   # ============================================
@@ -230,7 +284,7 @@ jobs:
       - name: Notify failure
         run: |
           echo "========================================"
-          echo "PIPELINE CI/CD FAILED"
+          echo " PIPELINE CI/CD FAILED"
           echo "========================================"
           echo "Repository: ${{ github.repository }}"
           echo "Commit: ${{ github.sha }}"
