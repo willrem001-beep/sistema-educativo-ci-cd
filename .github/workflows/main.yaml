@@ -165,7 +165,7 @@ jobs:
           Write-Host "Checking Minikube status..."
           minikube status
           kubectl get nodes
-  #actualizacion de imagen
+  #actualizacion de imagen 2
       - name: Update deployment image
         shell: powershell
         run: |
