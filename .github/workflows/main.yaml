@@ -155,7 +155,7 @@ jobs:
           minikube status
           kubectl get nodes
 
-      # 👇 NUEVO: Crear el secret para GHCR
+      #  NUEVO: Crear el secret para GHCR
       - name: Create GHCR secret in Minikube
         shell: powershell
         run: |
@@ -167,7 +167,7 @@ jobs:
             --dry-run=client -o yaml | kubectl apply -f -
           Write-Host "GHCR secret created/updated successfully"
 
-      # 👇 NUEVO: Parchear el deployment para usar el secret
+      #  NUEVO: Parchear el deployment para usar el secret
       - name: Patch deployment with imagePullSecret
         shell: powershell
         run: |
@@ -176,7 +176,7 @@ jobs:
             -p '{"spec":{"template":{"spec":{"imagePullSecrets":[{"name":"ghcr-secret"}]}}}}'
           Write-Host "Deployment ${{ matrix.service }} patched successfully"
 
-      # 👇 MODIFICADO: TODOS los servicios usan la imagen de GHCR
+      #  MODIFICADO: TODOS los servicios usan la imagen de GHCR
       - name: Update deployment image
         shell: powershell
         run: |
@@ -184,7 +184,7 @@ jobs:
           Write-Host "Updating ${{ matrix.service }} to image: $fullImage"
           kubectl set image deployment/${{ matrix.service }} ${{ matrix.service }}=$fullImage
 
-      # 👇 MODIFICADO: Agregado 'id' para poder referenciarlo en rollback
+      #  MODIFICADO: Agregado 'id' para poder referenciarlo en rollback
       - name: Verify rollout
         id: rollout
         shell: powershell
@@ -193,7 +193,7 @@ jobs:
           kubectl rollout status deployment/${{ matrix.service }} --timeout=5m
           Write-Host "Rollout of ${{ matrix.service }} completed"
 
-      # 👇 MODIFICADO: Ahora usa 'steps.rollout' correctamente
+      # MODIFICADO: Ahora usa 'steps.rollout' correctamente
       - name: Automatic Rollback on Failure
         if: failure() && steps.rollout.outcome == 'failure'
         shell: powershell
