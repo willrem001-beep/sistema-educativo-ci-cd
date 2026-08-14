@@ -186,7 +186,7 @@ jobs:
           minikube status
           kubectl get nodes
 
-      # 👇 NUEVO: Crear secret para Docker Hub (y GHCR)
+      #  NUEVO: Crear secret para Docker Hub (y GHCR)
       - name: Create image pull secrets
         shell: powershell
         run: |
@@ -211,9 +211,9 @@ jobs:
         shell: powershell
         run: |
           Write-Host "Adding imagePullSecrets to ${{ matrix.service }}..."
-          kubectl patch deployment ${{ matrix.service }} `
-            -p '{"spec":{"template":{"spec":{"imagePullSecrets":[{"name":"dockerhub-secret"},{"name":"ghcr-secret"}]}}}}'
-          Write-Host "Deployment ${{ matrix.service }} patched"
+          $json = '{"spec":{"template":{"spec":{"imagePullSecrets":[{"name":"dockerhub-secret"},{"name":"ghcr-secret"}]}}}}'
+          kubectl patch deployment ${{ matrix.service }} -p $json
+          Write-Host "✅ ImagePullSecrets added to ${{ matrix.service }}"
 
       #  MODIFICADO: Usar Docker Hub para TODOS los servicios
       - name: Update deployment image
