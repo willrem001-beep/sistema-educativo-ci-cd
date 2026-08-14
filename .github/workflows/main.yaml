@@ -134,7 +134,7 @@ jobs:
     strategy:
       matrix:
         service: [ms-usuarios, ms-tareas, ms-notas, ms-asistencia, ms-frontend]
-      fail-fast: true
+      fail-fast: false  # 👈 Cambiado: permite que otros servicios continúen si uno falla
 
     steps:
       - name: Checkout code
@@ -148,8 +148,6 @@ jobs:
           minikube version
           kubectl version --client
 
-      
-
       - name: Verify Minikube is running
         shell: powershell
         run: |
@@ -157,7 +155,8 @@ jobs:
           minikube status
           kubectl get nodes
 
-       - name: Create GHCR secret in Minikube
+      # 👇 NUEVO: Crear el secret para GHCR
+      - name: Create GHCR secret in Minikube
         shell: powershell
         run: |
           Write-Host "Creating GHCR image pull secret..."
@@ -177,7 +176,7 @@ jobs:
             -p '{"spec":{"template":{"spec":{"imagePullSecrets":[{"name":"ghcr-secret"}]}}}}'
           Write-Host "Deployment ${{ matrix.service }} patched successfully"
 
-      # MODIFICADO: TODOS los servicios usan la imagen de GHCR
+      # 👇 MODIFICADO: TODOS los servicios usan la imagen de GHCR
       - name: Update deployment image
         shell: powershell
         run: |
@@ -185,7 +184,7 @@ jobs:
           Write-Host "Updating ${{ matrix.service }} to image: $fullImage"
           kubectl set image deployment/${{ matrix.service }} ${{ matrix.service }}=$fullImage
 
-      # MODIFICADO: Agregado 'id' para poder referenciarlo en rollback
+      # 👇 MODIFICADO: Agregado 'id' para poder referenciarlo en rollback
       - name: Verify rollout
         id: rollout
         shell: powershell
@@ -194,7 +193,7 @@ jobs:
           kubectl rollout status deployment/${{ matrix.service }} --timeout=5m
           Write-Host "Rollout of ${{ matrix.service }} completed"
 
-      # MODIFICADO: Ahora usa 'steps.rollout' correctamente
+      # 👇 MODIFICADO: Ahora usa 'steps.rollout' correctamente
       - name: Automatic Rollback on Failure
         if: failure() && steps.rollout.outcome == 'failure'
         shell: powershell
@@ -203,7 +202,7 @@ jobs:
           Write-Host "FAILED! Rolling back ${{ matrix.service }} to previous stable version..."
           Write-Host "========================================"
           kubectl rollout undo deployment/${{ matrix.service }}
-          Write-Host "Rollback completed. System is stable
+          Write-Host "Rollback completed. System is stable."
 
       - name: Check pod status
         shell: powershell
