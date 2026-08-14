@@ -148,16 +148,7 @@ jobs:
           minikube version
           kubectl version --client
 
-      - name: Load latest image to Minikube (frontend only)
-        if: matrix.service == 'ms-frontend'
-        working-directory: ./frontend-tesis
-        shell: powershell
-        run: |
-          Write-Host "Building frontend Docker image..."
-          docker build --no-cache -t ms-frontend:latest .
-          Write-Host "Loading image to Minikube..."
-          minikube image load ms-frontend:latest
-          Write-Host "Image loaded successfully"
+      
 
       - name: Verify Minikube is running
         shell: powershell
@@ -180,6 +171,16 @@ jobs:
           Write-Host "Waiting for rollout of ${{ matrix.service }}..."
           kubectl rollout status deployment/${{ matrix.service }} --timeout=5m
           Write-Host "Rollout of ${{ matrix.service }} completed"
+
+      - name: Automatic Rollback on Failure
+        if: failure() && steps.rollout.outcome == 'failure'
+        shell: powershell
+        run: |
+          Write-Host "========================================"
+          Write-Host "FAILED! Rolling back ${{ matrix.service }} to previous stable version..."
+          Write-Host "========================================"
+          kubectl rollout undo deployment/${{ matrix.service }}
+          Write-Host "Rollback completed. System is stable."
 
       - name: Check pod status
         shell: powershell
