@@ -26,7 +26,7 @@ jobs:
       matrix:
         include:
           - service: ms-usuarios
-            path: ./Microserv_Users
+            path: ./Mcroserv_Users
             port: 3001
             docker_user: r3mr1z4
           - service: ms-tareas
@@ -214,9 +214,9 @@ jobs:
           $json = '{\"spec\":{\"template\":{\"spec\":{\"imagePullSecrets\":[{\"name\":\"dockerhub-secret\"},{\"name\":\"ghcr-secret\"}]}}}}'
           kubectl patch deployment ${{ matrix.service }} -p $json
           if ($LASTEXITCODE -eq 0) {
-            Write-Host "✅ ImagePullSecrets added to ${{ matrix.service }}"
+            Write-Host " ImagePullSecrets added to ${{ matrix.service }}"
           } else {
-            Write-Host "❌ Failed to patch ${{ matrix.service }}"
+            Write-Host " Failed to patch ${{ matrix.service }}"
             exit 1
           }
 
