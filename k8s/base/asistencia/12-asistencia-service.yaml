@@ -11,3 +11,4 @@ spec:
       port: 3004
       targetPort: 3004
       nodePort: 30004
+  type: NodePort
