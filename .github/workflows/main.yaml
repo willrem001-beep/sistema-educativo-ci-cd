@@ -89,7 +89,7 @@ jobs:
       - name: Debug Docker Hub secrets
         shell: bash
         run: |
-          echo "🔍 Verificando secrets de Docker Hub..."
+          echo " Verificando secrets de Docker Hub"
           if [ -z "${{ secrets.DOCKER_USERNAME }}" ]; then
             echo " DOCKER_USERNAME no está configurado"
             exit 1
@@ -186,7 +186,7 @@ jobs:
           minikube status
           kubectl get nodes
 
-      #  NUEVO: Crear secret para Docker Hub (y GHCR)
+      #  Crear secret para Docker Hub (y GHCR)
       - name: Create image pull secrets
         shell: powershell
         run: |
@@ -206,7 +206,7 @@ jobs:
           
           Write-Host "Image pull secrets created/updated"
 
-      # NUEVO: Parchear deployments con los secrets
+      # Parchear deployments con los secrets
       - name: Patch deployment with imagePullSecrets
         shell: powershell
         run: |
@@ -220,7 +220,7 @@ jobs:
             exit 1
           }
 
-      #  MODIFICADO: Usar Docker Hub para TODOS los servicios
+      # Usar Docker Hub para TODOS los servicios
       - name: Update deployment image
         shell: powershell
         run: |
@@ -251,7 +251,7 @@ jobs:
         shell: powershell
         run: |
           Write-Host "========================================"
-          Write-Host "⚠️ ROLLBACK: ${{ matrix.service }} failed to rollout!"
+          Write-Host " ROLLBACK: ${{ matrix.service }} failed to rollout!"
           Write-Host "========================================"
           kubectl rollout undo deployment/${{ matrix.service }}
           kubectl rollout status deployment/${{ matrix.service }} --timeout=3m

@@ -3,7 +3,7 @@ kind: Deployment
 metadata:
   name: ms-frontend
 spec:
-  replicas: 2 # 2 réplicas del Frontend
+  replicas: 2 # n réplicas del Frontend
   selector:
     matchLabels:
       app: ms-frontend
@@ -18,7 +18,7 @@ spec:
     spec:
       containers:
       - name: ms-frontend
-        image: ghcr.io/willrem001-beep/sistema-educativo-ci-cd/ms-frontend:${IMAGE_TAG}
+        image: ghcr.io/willrem001-beep/sistema-educativo-ci-cd/ms-frontend:latest
         imagePullPolicy: Always
         ports:
         - containerPort: 80
