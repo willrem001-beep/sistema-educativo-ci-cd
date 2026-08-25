@@ -37,7 +37,7 @@ jobs:
             path: ./Microserv_Notas
             port: 3003
             docker_user: r3mr1z4
-          - service: ms-asistenci
+          - service: ms-asistencia
             path: ./Microserv_Asistencias
             port: 3004
             docker_user: r3mr1z4
