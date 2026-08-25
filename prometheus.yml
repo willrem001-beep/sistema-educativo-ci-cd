@@ -5,41 +5,40 @@ global:
     monitor: 'tesis-final'
 
 scrape_configs:
-  # 1. Prometheus (Se auto-monitoriza)
+  # 1. Prometheus
   - job_name: 'prometheus'
     static_configs:
       - targets: ['localhost:9090']
 
   # 2. Microservicio de Usuarios
-  # IMPORTANTE: Usa la IP de Minikube y el NodePort (30001)
   - job_name: 'ms-usuarios'
     metrics_path: /metrics
     static_configs:
-      - targets: ['host.docker.internal:65507']
+      - targets: ['host.docker.internal:30001']
         labels:
           app: 'usuarios'
 
-  # 3. Microservicio de Tareas (Puerto 30002)
+  # 3. Microservicio de Tareas 
   - job_name: 'ms-tareas'
     metrics_path: /metrics
     static_configs:
-      - targets: ['host.docker.internal:62570']
+      - targets: ['host.docker.internal:30002']
         labels:
           app: 'tareas'
 
-  # 4. Microservicio de Notas (Puerto 30003)
+  # 4. Microservicio de Notas 
   - job_name: 'ms-notas'
     metrics_path: /metrics
     static_configs:
-      - targets: ['host.docker.internal:62579']
+      - targets: ['host.docker.internal:30003']
         labels:
           app: 'notas'
 
-  # 5. Microservicio de Asistencia (Puerto 30004)
+  # 5. Microservicio de Asistencia 
   - job_name: 'ms-asistencia'
     metrics_path: /metrics
     static_configs:
-      - targets: ['host.docker.internal:62585']
+      - targets: ['host.docker.internal:30004']
         labels:
           app: 'asistencia'
 
