@@ -15,7 +15,7 @@ scrape_configs:
   - job_name: 'ms-usuarios'
     metrics_path: /metrics
     static_configs:
-      - targets: ['host.docker.internal:30001']
+      - targets: ['host.docker.internal:65229']
         labels:
           app: 'usuarios'
 
@@ -23,7 +23,7 @@ scrape_configs:
   - job_name: 'ms-tareas'
     metrics_path: /metrics
     static_configs:
-      - targets: ['host.docker.internal:30002']
+      - targets: ['host.docker.internal:58315']
         labels:
           app: 'tareas'
 
@@ -31,7 +31,7 @@ scrape_configs:
   - job_name: 'ms-notas'
     metrics_path: /metrics
     static_configs:
-      - targets: ['host.docker.internal:30003']
+      - targets: ['host.docker.internal:58323']
         labels:
           app: 'notas'
 
@@ -39,17 +39,10 @@ scrape_configs:
   - job_name: 'ms-asistencia'
     metrics_path: /metrics
     static_configs:
-      - targets: ['host.docker.internal:30004']
+      - targets: ['host.docker.internal:61054']
         labels:
           app: 'asistencia'
 
-
-  - job_name: 'ms-frontend'
-    metrics_path: /metrics
-    static_configs:
-      - targets: ['host.docker.internal:80']
-        labels:
-          app: 'frontend'
 
    # CADVISOR
   - job_name: 'cadvisor'
@@ -64,5 +57,5 @@ scrape_configs:
   # KUBE-STATE-METRICS 
   - job_name: 'kube-state-metrics'
     static_configs:
-      - targets: ['host.docker.internal:30880']  # Puerto del port-forward
+      - targets: ['host.docker.internal:8080']  # Puerto del port-forward
     scrape_interval: 15s
