@@ -5,48 +5,45 @@ global:
     monitor: 'tesis-final'
 
 scrape_configs:
-  # 1. Prometheus
+  # 1. Prometheus (Se auto-monitoriza)
   - job_name: 'prometheus'
     static_configs:
       - targets: ['localhost:9090']
 
-  # 2. MICROSERVICIOS (usando nombres internos del clúster)
+  # 2. Microservicio de Usuarios
+  # IMPORTANTE: Usa la IP de Minikube y el NodePort (30001)
   - job_name: 'ms-usuarios'
     metrics_path: /metrics
     static_configs:
-      - targets: ['ms-usuarios:3001']
+      - targets: ['host.docker.internal:30001']
         labels:
           app: 'usuarios'
 
+  # 3. Microservicio de Tareas (Puerto 30002)
   - job_name: 'ms-tareas'
     metrics_path: /metrics
     static_configs:
-      - targets: ['ms-tareas:3002']
+      - targets: ['host.docker.internal:30002']
         labels:
           app: 'tareas'
 
+  # 4. Microservicio de Notas (Puerto 30003)
   - job_name: 'ms-notas'
     metrics_path: /metrics
     static_configs:
-      - targets: ['ms-notas:3003']
+      - targets: ['host.docker.internal:30003']
         labels:
           app: 'notas'
 
+  # 5. Microservicio de Asistencia (Puerto 30004)
   - job_name: 'ms-asistencia'
     metrics_path: /metrics
     static_configs:
-      - targets: ['ms-asistencia:3004']
+      - targets: ['host.docker.internal:30004']
         labels:
           app: 'asistencia'
 
-  - job_name: 'ms-frontend'
-    metrics_path: /metrics
-    static_configs:
-      - targets: ['ms-frontend:80']
-        labels:
-          app: 'frontend'
-
-  # CADVISOR
+   # CADVISOR
   - job_name: 'cadvisor'
     static_configs:
       - targets: ['cadvisor:8080']
@@ -56,8 +53,8 @@ scrape_configs:
     static_configs:
       - targets: ['node-exporter:9100']
       
-  # KUBE-STATE-METRICS
+  # KUBE-STATE-METRICS 
   - job_name: 'kube-state-metrics'
     static_configs:
-      - targets: ['prometheus-kube-state-metrics.monitoring.svc.cluster.local:8080']
+      - targets: ['host.docker.internal:30880']  # Puerto del port-forward
     scrape_interval: 15s
